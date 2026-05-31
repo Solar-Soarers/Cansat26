@@ -1,13 +1,1873 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cansat26</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/ui/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INSPACE CAN-7USAT GCS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
+
+    :root {
+      --bg0: #070b0f;
+      --bg1: #0c1219;
+      --bg2: #111a24;
+      --bg3: #162030;
+      --bg4: #1c2b3a;
+
+      --cyan: #00d4ff;
+      --cyan2: #00a8cc;
+      --cyan3: #007a99;
+
+      --amber: #ffaa00;
+      --amber2: #cc8800;
+      --amber3: #805500;
+
+      --green: #00e87a;
+      --green2: #00b85f;
+      --green3: #006e39;
+
+      --red: #ff3b3b;
+      --red2: #cc2a2a;
+
+      --orange: #ff6b2b;
+      --purple: #a855f7;
+
+      --text0: #e8f4ff;
+      --text1: #9bb5cc;
+      --text2: #5a7a99;
+
+      --border: #1e3348;
+      --border2: #2a4a66;
+
+      --canvasbg: #07100f;
+      --black: #000000;
+      --termgreen: #4ade80;
+      --white: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg0);
+      color: var(--text0);
+    }
+
+    .gcs-root {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(1000px 450px at 50% -20%, rgba(0, 212, 255, 0.08), transparent 60%), var(--bg0);
+    }
+
+    .hdr {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      height: 46px;
+      padding: 0 10px;
+      background: var(--bg1);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    .logo {
+      color: var(--cyan);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      white-space: nowrap;
+    }
+
+    .vsep {
+      width: 1px;
+      height: 24px;
+      background: var(--border2);
+      flex: 0 0 auto;
+    }
+
+    .conn-badge,
+    .state-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      padding: 3px 8px;
+    }
+
+    .conn-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse-dot 2s ease-in-out infinite;
+      flex: 0 0 auto;
+    }
+
+    @keyframes pulse-dot {
+      0% { opacity: 1; }
+      50% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    .mono-10 {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      line-height: 1;
+    }
+
+    .signal-wrap {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 14px;
+      margin-left: 4px;
+    }
+
+    .signal-wrap i {
+      display: block;
+      width: 3px;
+      border-radius: 1px;
+      background: var(--border2);
+    }
+
+    .signal-wrap i:nth-child(1) { height: 4px; }
+    .signal-wrap i:nth-child(2) { height: 6px; }
+    .signal-wrap i:nth-child(3) { height: 9px; }
+    .signal-wrap i:nth-child(4) { height: 12px; }
+    .signal-wrap i:nth-child(5) { height: 14px; }
+
+    .state-badge {
+      background: var(--bg3);
+      border-color: var(--amber);
+      color: var(--amber);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      padding: 3px 10px;
+      white-space: nowrap;
+    }
+
+    .met {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--amber);
+      white-space: nowrap;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
+    .cmd-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      padding: 4px 10px;
+      color: var(--text0);
+      font: 700 10px 'Rajdhani', sans-serif;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .cmd-btn:hover {
+      border-color: var(--cyan2);
+      color: var(--cyan);
+      background: var(--bg4);
+    }
+
+    .btn-arm { border-color: var(--green3); color: var(--green); }
+    .btn-arm:hover { background: rgba(0, 232, 122, 0.1); }
+    .btn-stop { border-color: var(--red2); color: var(--red); }
+    .btn-stop:hover { background: rgba(255, 59, 59, 0.1); }
+    .btn-sim { border-color: var(--purple); color: var(--purple); }
+    .btn-sim:hover { background: rgba(168, 85, 247, 0.1); }
+
+    .body {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 260px 1fr 248px;
+    }
+
+    .panel {
+      min-height: 0;
+      overflow-y: auto;
+      background: linear-gradient(180deg, rgba(0, 212, 255, 0.03), transparent 24%), var(--bg1);
+    }
+
+    .left-panel { border-right: 1px solid var(--border); }
+    .center-panel { border-right: 1px solid var(--border); }
+
+    .section {
+      background: var(--bg2);
+      margin: 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      padding: 10px;
+    }
+
+    .sec-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font: 700 11px 'Rajdhani', sans-serif;
+      color: var(--cyan);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .sec-title::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border: 1.5px solid var(--cyan);
+      border-radius: 1px;
+      display: inline-block;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    #canSatCanvas,
+    #mapCanvas {
+      width: 244px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 8px;
+      background: var(--canvasbg);
+    }
+
+    #canSatCanvas { height: 120px; }
+    #mapCanvas { height: 90px; }
+
+    .grid-3,
+    .grid-2,
+    .grid-4 {
+      display: grid;
+      gap: 6px;
+    }
+
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+    .data-cell,
+    .env-card,
+    .gas-card,
+    .chip,
+    .mini-card {
+      background: var(--bg3);
+      border-radius: 3px;
+      border: 1px solid rgba(30, 51, 72, 0.5);
+      padding: 6px;
+      min-width: 0;
+    }
+
+    .label {
+      font: 400 10px 'Rajdhani', sans-serif;
+      letter-spacing: 0.8px;
+      color: var(--text2);
+      text-transform: uppercase;
+    }
+
+    .value,
+    .unit,
+    .mono {
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    .value { color: var(--text0); }
+    .unit {
+      color: var(--text2);
+      font-size: 9px;
+      margin-top: 1px;
+    }
+
+    .att-value {
+      margin-top: 2px;
+      font-size: 13px;
+      color: var(--cyan);
+    }
+
+    .acc-value {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--text1);
+    }
+
+    .gyro-wrap {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #gyroCanvas,
+    #aqiCanvas {
+      width: 70px;
+      height: 70px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--canvasbg);
+      flex: 0 0 70px;
+    }
+
+    .gyro-col,
+    .aqi-col {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .rpm-big {
+      color: var(--amber);
+      font: 400 20px 'Share Tech Mono', monospace;
+      line-height: 1.1;
+    }
+
+    .spin-status {
+      font: 700 11px 'Rajdhani', sans-serif;
+      letter-spacing: 0.6px;
+    }
+
+    .map-wrap {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .map-lock {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      font: 9px 'Share Tech Mono', monospace;
+      color: var(--cyan);
+      background: rgba(0, 0, 0, 0.6);
+      padding: 2px 5px;
+      border-radius: 2px;
+    }
+
+    .state-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+
+    .chip {
+      font: 9px 'Share Tech Mono', monospace;
+      color: var(--text2);
+      letter-spacing: 0.5px;
+      padding: 3px 6px;
+      border-color: var(--border);
+    }
+
+    .chip.active {
+      border-color: var(--amber);
+      color: var(--amber);
+      background: rgba(255, 170, 0, 0.08);
+    }
+
+    .alt-readout {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .alt-big {
+      font: 400 42px 'Share Tech Mono', monospace;
+      color: var(--amber);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .alt-unit {
+      font: 16px 'Share Tech Mono', monospace;
+      color: var(--text2);
+    }
+
+    .rate {
+      font: 11px 'Share Tech Mono', monospace;
+    }
+
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      margin-bottom: 8px;
+    }
+
+    #altChart {
+      width: 100%;
+      height: 100%;
+    }
+
+    .metric-value {
+      margin-top: 2px;
+      font-size: 15px;
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--text0);
+    }
+
+    .terminal {
+      height: 140px;
+      overflow-y: auto;
+      background: var(--black);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 8px;
+      font: 10px 'Share Tech Mono', monospace;
+      color: var(--termgreen);
+      line-height: 1.35;
+    }
+
+    .term-line {
+      white-space: nowrap;
+      animation: term-fade 1s ease forwards;
+    }
+
+    @keyframes term-fade {
+      0% { color: var(--white); }
+      100% { color: var(--termgreen); }
+    }
+
+    .pm-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 7px;
+    }
+
+    .pm-label,
+    .pm-val {
+      font: 10px 'Share Tech Mono', monospace;
+      color: var(--text2);
+    }
+
+    .pm-label { width: 36px; }
+    .pm-val {
+      width: 50px;
+      text-align: right;
+      color: var(--text1);
+    }
+
+    .bar-bg {
+      flex: 1;
+      height: 8px;
+      background: var(--bg0);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s ease;
+      width: 0%;
+    }
+
+    .co2-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .co2-bar-bg {
+      flex: 1;
+      height: 10px;
+      background: var(--bg0);
+      border-radius: 5px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .co2-mark {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      left: 60%;
+      background: var(--red);
+      z-index: 2;
+    }
+
+    .co2-fill {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      border-radius: 5px;
+      width: 0%;
+      transition: width 1.5s ease;
+    }
+
+    .threshold-note {
+      padding-left: 34px;
+      font: 9px 'Share Tech Mono', monospace;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+
+    .gas-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+
+    .gas-card {
+      background: var(--bg0);
+      border: 1px solid var(--border);
+      padding: 6px 7px;
+    }
+
+    .gas-value {
+      margin-top: 1px;
+      font: 14px 'Share Tech Mono', monospace;
+      color: var(--cyan);
+    }
+
+    .gas-unit {
+      font: 9px 'Share Tech Mono', monospace;
+      color: var(--text2);
+    }
+
+    .thinbar {
+      height: 3px;
+      margin-top: 4px;
+      background: var(--bg1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .thinbar > div {
+      height: 100%;
+      width: 0%;
+      transition: width 1s;
+    }
+
+    .aqi-wrap {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .aqi-big {
+      font: 28px 'Share Tech Mono', monospace;
+      line-height: 1;
+    }
+
+    .aqi-label {
+      font: 700 11px 'Rajdhani', sans-serif;
+      letter-spacing: 1px;
+    }
+
+    .raw-line {
+      font: 10px 'Share Tech Mono', monospace;
+      color: var(--text2);
+    }
+
+    ::-webkit-scrollbar { width: 3px; height: 3px; }
+    ::-webkit-scrollbar-track { background: var(--bg1); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    @media (max-width: 1250px) {
+      .body {
+        grid-template-columns: 260px 1fr;
+      }
+
+      .right-panel {
+        display: none;
+      }
+    }
+
+    @media (max-width: 920px) {
+      .body {
+        grid-template-columns: 1fr;
+      }
+
+      .left-panel {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="gcs-root">
+    <header class="hdr">
+      <div class="logo">◆ INSPACE · CAN-7USAT</div>
+      <div class="vsep"></div>
+
+      <div class="conn-badge">
+        <span id="connDot" class="conn-dot"></span>
+        <span id="connText" class="mono-10" style="color: var(--green);">CONNECTED</span>
+      </div>
+
+      <div class="vsep"></div>
+
+      <div class="mono-10" style="display:flex; align-items:center; gap:6px; color: var(--text2);">
+        <span>RSSI</span>
+        <span id="rssiText" style="color: var(--cyan);">-72 dBm</span>
+        <span id="signalBars" class="signal-wrap" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i>
+        </span>
+      </div>
+
+      <div class="vsep"></div>
+
+      <div class="mono-10" style="display:flex; align-items:center; gap:8px; color: var(--text2);">
+        <span>PKT: <span id="pktTop" style="color: var(--cyan);">0</span></span>
+        <span style="color: var(--cyan);">TEAM: BU-ASTRO-CAN7</span>
+      </div>
+
+      <div class="vsep"></div>
+
+      <div id="stateBadge" class="state-badge">STATE 2 · PAD</div>
+
+      <div id="metClock" class="met">MET 00:00:00</div>
+
+      <div class="spacer"></div>
+
+      <button id="btnArm" class="cmd-btn btn-arm">ARM / START_TX</button>
+      <button id="btnStop" class="cmd-btn btn-stop">STOP_TX</button>
+      <button id="btnCal" class="cmd-btn">CAL ZERO</button>
+      <button id="btnSimEnable" class="cmd-btn btn-sim">SIM_ENABLE</button>
+      <button id="btnSimActivate" class="cmd-btn btn-sim">SIM_ACTIVATE</button>
+    </header>
+
+    <main class="body">
+      <aside class="panel left-panel">
+        <section class="section">
+          <div class="sec-title">ORIENTATION · BNO055</div>
+          <canvas id="canSatCanvas" width="244" height="120"></canvas>
+
+          <div class="grid-3" style="margin-bottom: 6px;">
+            <div class="data-cell">
+              <div class="label">PITCH</div>
+              <div id="pitchVal" class="value att-value">0.0</div>
+              <div class="unit">°</div>
+            </div>
+            <div class="data-cell">
+              <div class="label">ROLL</div>
+              <div id="rollVal" class="value att-value">0.0</div>
+              <div class="unit">°</div>
+            </div>
+            <div class="data-cell">
+              <div class="label">YAW</div>
+              <div id="yawVal" class="value att-value">0.0</div>
+              <div class="unit">°</div>
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div class="data-cell">
+              <div class="label">AX</div>
+              <div id="axVal" class="value acc-value">0.00</div>
+              <div class="unit">m/s²</div>
+            </div>
+            <div class="data-cell">
+              <div class="label">AY</div>
+              <div id="ayVal" class="value acc-value">0.00</div>
+              <div class="unit">m/s²</div>
+            </div>
+            <div class="data-cell">
+              <div class="label">AZ</div>
+              <div id="azVal" class="value acc-value">9.81</div>
+              <div class="unit">m/s²</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="sec-title">MOMENTUM WHEEL · A3144</div>
+          <div class="gyro-wrap">
+            <canvas id="gyroCanvas" width="70" height="70"></canvas>
+            <div class="gyro-col">
+              <div id="rpmBig" class="rpm-big">0</div>
+              <div class="unit" style="font-size:11px;">RPM</div>
+              <div id="degSec" class="mono" style="font-size:11px; color:var(--text1);">0 deg/s</div>
+              <div id="spinStatus" class="spin-status" style="color: var(--text2);">○ IDLE</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="sec-title">GNSS · NavIC L5</div>
+          <div class="map-wrap">
+            <canvas id="mapCanvas" width="244" height="90"></canvas>
+            <div id="mapLock" class="map-lock">LOCK · 9/12 SAT</div>
+          </div>
+
+          <div class="grid-2">
+            <div class="data-cell">
+              <div class="label">LATITUDE</div>
+              <div id="latVal" class="mono" style="margin-top:2px; color:var(--cyan); font-size:12px;">28.450600</div>
+            </div>
+            <div class="data-cell">
+              <div class="label">LONGITUDE</div>
+              <div id="lonVal" class="mono" style="margin-top:2px; color:var(--cyan); font-size:12px;">77.585500</div>
+            </div>
+            <div class="data-cell">
+              <div class="label">GNSS ALT</div>
+              <div id="gnssAltVal" class="mono" style="margin-top:2px; color:var(--text1); font-size:12px;">208.0 m</div>
+            </div>
+            <div class="data-cell">
+              <div class="label">SATS (NavIC)</div>
+              <div id="satsVal" class="mono" style="margin-top:2px; color:var(--text1); font-size:12px;">9</div>
+            </div>
+            <div class="data-cell">
+              <div class="label">GNSS TIME</div>
+              <div id="gnssTimeVal" class="mono" style="margin-top:2px; color:var(--text1); font-size:10px;">00:00:00</div>
+            </div>
+            <div class="data-cell">
+              <div class="label">DIST · PAD</div>
+              <div id="distPadVal" class="mono" style="margin-top:2px; color:var(--text1); font-size:12px;">0.0 m</div>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <section class="panel center-panel">
+        <section class="section">
+          <div class="sec-title">PRIMARY FLIGHT</div>
+
+          <div id="stateRow" class="state-row">
+            <div class="chip" data-state="0">S0:BOOT</div>
+            <div class="chip" data-state="1">S1:TEST</div>
+            <div class="chip" data-state="2">S2:PAD</div>
+            <div class="chip" data-state="3">S3:ASCENT</div>
+            <div class="chip" data-state="4">S4:DEPLOY</div>
+            <div class="chip" data-state="5">S5:DESCENT</div>
+            <div class="chip" data-state="6">S6:AEROBREAK</div>
+            <div class="chip" data-state="7">S7:IMPACT</div>
+          </div>
+
+          <div class="alt-readout">
+            <div id="altBig" class="alt-big">0.0</div>
+            <div class="alt-unit">m</div>
+            <div id="descentRate" class="rate" style="color:var(--green);">▲ 0.0 m/s</div>
+          </div>
+
+          <div class="chart-wrap">
+            <canvas id="altChart"></canvas>
+          </div>
+
+          <div class="grid-4">
+            <div class="mini-card">
+              <div class="label">PRESSURE (Pa)</div>
+              <div id="pressMini" class="metric-value">101325</div>
+            </div>
+            <div class="mini-card">
+              <div class="label">TEMP · BMP (°C)</div>
+              <div id="tempMini" class="metric-value">28.5</div>
+            </div>
+            <div class="mini-card">
+              <div class="label">VOLTAGE (V)</div>
+              <div id="voltMini" class="metric-value" style="color:var(--green);">4.08</div>
+            </div>
+            <div class="mini-card">
+              <div class="label">PKT / STATE</div>
+              <div id="pktStateMini" class="metric-value">0 / S2</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="sec-title">TELEMETRY TERMINAL · 1 Hz CSV</div>
+          <div id="terminal" class="terminal"></div>
+        </section>
+      </section>
+
+      <aside class="panel right-panel">
+        <section class="section">
+          <div class="sec-title">ENVIRONMENTAL · BMP390</div>
+          <div class="grid-2">
+            <div class="env-card">
+              <div class="label">PRESSURE (Pa)</div>
+              <div id="envPressure" class="mono" style="font-size:16px; color:var(--cyan); margin-top:2px;">101325</div>
+            </div>
+            <div class="env-card">
+              <div class="label">TEMPERATURE (°C)</div>
+              <div id="envTemp" class="mono" style="font-size:16px; color:var(--orange); margin-top:2px;">28.5</div>
+            </div>
+            <div class="env-card">
+              <div class="label">BAT VOLTAGE (V)</div>
+              <div id="envVolt" class="mono" style="font-size:16px; color:var(--cyan); margin-top:2px;">4.08</div>
+            </div>
+            <div class="env-card">
+              <div class="label">UV INDEX (UVI)</div>
+              <div id="envUv" class="mono" style="font-size:16px; color:var(--cyan); margin-top:2px;">3.2</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="sec-title">PARTICULATE MATTER · SPS30</div>
+          <div class="pm-row">
+            <div class="pm-label">PM1.0</div>
+            <div class="bar-bg"><div id="pm1Bar" class="bar-fill" style="background: var(--green);"></div></div>
+            <div id="pm1Val" class="pm-val">0.0 µg</div>
+          </div>
+          <div class="pm-row">
+            <div class="pm-label">PM2.5</div>
+            <div class="bar-bg"><div id="pm25Bar" class="bar-fill" style="background: var(--cyan2);"></div></div>
+            <div id="pm25Val" class="pm-val">0.0 µg</div>
+          </div>
+          <div class="pm-row">
+            <div class="pm-label">PM4.0</div>
+            <div class="bar-bg"><div id="pm4Bar" class="bar-fill" style="background: var(--amber2);"></div></div>
+            <div id="pm4Val" class="pm-val">0.0 µg</div>
+          </div>
+          <div class="pm-row" style="margin-bottom:0;">
+            <div class="pm-label">PM10</div>
+            <div class="bar-bg"><div id="pm10Bar" class="bar-fill" style="background: var(--orange);"></div></div>
+            <div id="pm10Val" class="pm-val">0.0 µg</div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="sec-title">CO₂ / HUMIDITY · SCD41</div>
+          <div class="co2-row">
+            <div class="mono" style="width:28px; color:var(--text2); font-size:10px;">CO₂</div>
+            <div class="co2-bar-bg">
+              <div class="co2-mark"></div>
+              <div id="co2Bar" class="co2-fill"></div>
+            </div>
+            <div id="co2Val" class="mono" style="font-size:12px; color:var(--amber);">1420</div>
+            <div class="mono" style="font-size:9px; color:var(--text2);">ppm</div>
+          </div>
+          <div class="threshold-note">Threshold: 2400 ppm ▲</div>
+
+          <div class="grid-2">
+            <div class="data-cell">
+              <div class="label">TEMP (SCD)</div>
+              <div id="scdTemp" class="mono" style="font-size:13px; color:var(--text0); margin-top:2px;">26.2</div>
+            </div>
+            <div class="data-cell">
+              <div class="label">HUMIDITY</div>
+              <div id="humidityVal" class="mono" style="font-size:13px; color:var(--text0); margin-top:2px;">54.6%</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="sec-title">ATM. GASES · MiCS-4514</div>
+          <div class="gas-grid">
+            <div class="gas-card">
+              <div class="label">NO₂</div>
+              <div id="no2Val" class="gas-value">0.048</div>
+              <div class="gas-unit">ppm</div>
+              <div class="thinbar"><div id="no2Bar" style="background: var(--amber);"></div></div>
+            </div>
+            <div class="gas-card">
+              <div class="label">CO</div>
+              <div id="coVal" class="gas-value">1.240</div>
+              <div class="gas-unit">ppm</div>
+              <div class="thinbar"><div id="coBar" style="background: var(--orange);"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="sec-title">AIR QUALITY INDEX · MQ-135</div>
+          <div class="aqi-wrap">
+            <canvas id="aqiCanvas" width="70" height="70"></canvas>
+            <div class="aqi-col">
+              <div id="aqiBig" class="aqi-big" style="color: var(--green);">42</div>
+              <div id="aqiLabel" class="aqi-label" style="color: var(--green);">GOOD</div>
+              <div id="aqiRaw" class="raw-line">Raw: 312 ADC · 0.65V</div>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      var rootStyle = getComputedStyle(document.documentElement);
+      function cssVar(name) {
+        return rootStyle.getPropertyValue(name).trim();
+      }
+
+      var STATE_NAMES = {
+        0: 'BOOT',
+        1: 'TEST',
+        2: 'PAD',
+        3: 'ASCENT',
+        4: 'DEPLOY',
+        5: 'DESCENT',
+        6: 'AEROBREAK',
+        7: 'IMPACT'
+      };
+
+      var tick = 0;
+      var missionSec = 0;
+      var simActive = false;
+      var armed = false;
+      var simPhase = 0;
+      var altitude = 0;
+      var altHistory = [];
+      var timeHistory = [];
+      var pktCount = 0;
+      var currentState = 2;
+      var gyroRPM = 0;
+      var mainDeployed = false;
+      var pitch3d = 0;
+      var roll3d = 0;
+      var yaw3d = 0;
+      var trackPoints = [];
+      var simEnabled = false;
+      var currentAQI = 42;
+      var rssi = -72;
+      var launchLogged = false;
+      var impactLogged = false;
+      var signalConnected = true;
+      var simActivationAt = null;
+      var gyroAngle = 0;
+      var latest = {
+        pressure: 101325,
+        temp: 28.5,
+        voltage: 4.08,
+        uv: 3.2,
+        lat: 28.4506,
+        lon: 77.5855,
+        gnssAlt: 208,
+        sats: 9,
+        dist: 0,
+        humidity: 54.6,
+        co2: 1420,
+        pm1: 8,
+        pm25: 18.4,
+        pm4: 25.7,
+        pm10: 35.8,
+        no2: 0.048,
+        co: 1.24,
+        accelX: 0,
+        accelY: 0,
+        accelZ: 9.81,
+        gnssTime: '00:00:00',
+        descentRate: 0,
+        state: 2,
+        optionalData: 'NOMINAL'
+      };
+
+      var el = {
+        connDot: document.getElementById('connDot'),
+        connText: document.getElementById('connText'),
+        rssiText: document.getElementById('rssiText'),
+        signalBars: document.getElementById('signalBars').children,
+        pktTop: document.getElementById('pktTop'),
+        stateBadge: document.getElementById('stateBadge'),
+        metClock: document.getElementById('metClock'),
+        chips: Array.prototype.slice.call(document.querySelectorAll('.chip')),
+
+        pitchVal: document.getElementById('pitchVal'),
+        rollVal: document.getElementById('rollVal'),
+        yawVal: document.getElementById('yawVal'),
+        axVal: document.getElementById('axVal'),
+        ayVal: document.getElementById('ayVal'),
+        azVal: document.getElementById('azVal'),
+
+        rpmBig: document.getElementById('rpmBig'),
+        degSec: document.getElementById('degSec'),
+        spinStatus: document.getElementById('spinStatus'),
+
+        latVal: document.getElementById('latVal'),
+        lonVal: document.getElementById('lonVal'),
+        gnssAltVal: document.getElementById('gnssAltVal'),
+        satsVal: document.getElementById('satsVal'),
+        gnssTimeVal: document.getElementById('gnssTimeVal'),
+        distPadVal: document.getElementById('distPadVal'),
+        mapLock: document.getElementById('mapLock'),
+
+        altBig: document.getElementById('altBig'),
+        descentRate: document.getElementById('descentRate'),
+        pressMini: document.getElementById('pressMini'),
+        tempMini: document.getElementById('tempMini'),
+        voltMini: document.getElementById('voltMini'),
+        pktStateMini: document.getElementById('pktStateMini'),
+
+        terminal: document.getElementById('terminal'),
+
+        envPressure: document.getElementById('envPressure'),
+        envTemp: document.getElementById('envTemp'),
+        envVolt: document.getElementById('envVolt'),
+        envUv: document.getElementById('envUv'),
+
+        pm1Bar: document.getElementById('pm1Bar'),
+        pm25Bar: document.getElementById('pm25Bar'),
+        pm4Bar: document.getElementById('pm4Bar'),
+        pm10Bar: document.getElementById('pm10Bar'),
+        pm1Val: document.getElementById('pm1Val'),
+        pm25Val: document.getElementById('pm25Val'),
+        pm4Val: document.getElementById('pm4Val'),
+        pm10Val: document.getElementById('pm10Val'),
+
+        co2Bar: document.getElementById('co2Bar'),
+        co2Val: document.getElementById('co2Val'),
+        scdTemp: document.getElementById('scdTemp'),
+        humidityVal: document.getElementById('humidityVal'),
+
+        no2Val: document.getElementById('no2Val'),
+        coVal: document.getElementById('coVal'),
+        no2Bar: document.getElementById('no2Bar'),
+        coBar: document.getElementById('coBar'),
+
+        aqiBig: document.getElementById('aqiBig'),
+        aqiLabel: document.getElementById('aqiLabel'),
+        aqiRaw: document.getElementById('aqiRaw')
+      };
+
+      var canSatCanvas = document.getElementById('canSatCanvas');
+      var canCtx = canSatCanvas.getContext('2d');
+      var gyroCanvas = document.getElementById('gyroCanvas');
+      var gyroCtx = gyroCanvas.getContext('2d');
+      var mapCanvas = document.getElementById('mapCanvas');
+      var mapCtx = mapCanvas.getContext('2d');
+      var aqiCanvas = document.getElementById('aqiCanvas');
+      var aqiCtx = aqiCanvas.getContext('2d');
+
+      function rand(min, max) {
+        return min + Math.random() * (max - min);
+      }
+
+      function clamp(v, min, max) {
+        return Math.max(min, Math.min(max, v));
+      }
+
+      function fmt(num, digits) {
+        return Number(num).toFixed(digits == null ? 1 : digits);
+      }
+
+      function formatNum(num, digits) {
+        return Number(num).toLocaleString(undefined, {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
+        });
+      }
+
+      function hhmmss(totalSec) {
+        var s = Math.max(0, totalSec | 0);
+        var h = String(Math.floor(s / 3600)).padStart(2, '0');
+        var m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+        var sec = String(s % 60).padStart(2, '0');
+        return h + ':' + m + ':' + sec;
+      }
+
+      function setConnection(isConnected) {
+        signalConnected = isConnected;
+        if (isConnected) {
+          el.connDot.style.background = cssVar('--green');
+          el.connDot.style.boxShadow = '0 0 6px ' + cssVar('--green');
+          el.connText.textContent = 'CONNECTED';
+          el.connText.style.color = cssVar('--green');
+        } else {
+          el.connDot.style.background = cssVar('--red');
+          el.connDot.style.boxShadow = '0 0 6px ' + cssVar('--red');
+          el.connText.textContent = 'NO LINK';
+          el.connText.style.color = cssVar('--red');
+        }
+        updateSignalBars();
+      }
+
+      function updateSignalBars() {
+        var litCount = 0;
+        if (signalConnected) {
+          if (rssi > -65) litCount = 5;
+          else if (rssi > -72) litCount = 4;
+          else if (rssi > -80) litCount = 3;
+          else if (rssi > -90) litCount = 2;
+          else litCount = 1;
+        }
+        for (var i = 0; i < el.signalBars.length; i += 1) {
+          el.signalBars[i].style.background = i < litCount ? cssVar('--green') : cssVar('--border2');
+        }
+      }
+
+      function setStateDisplay(state) {
+        currentState = state;
+        for (var i = 0; i < el.chips.length; i += 1) {
+          var c = el.chips[i];
+          c.classList.toggle('active', Number(c.getAttribute('data-state')) === state);
+        }
+        el.stateBadge.textContent = 'STATE ' + state + ' · ' + (STATE_NAMES[state] || 'UNK');
+      }
+
+      function addTerminalLine(tag, msg) {
+        var line = document.createElement('div');
+        line.className = 'term-line';
+
+        var head = document.createElement('span');
+        head.textContent = '[' + tag + '] ';
+        if (tag === 'RX' || tag === 'GS') head.style.color = cssVar('--cyan2');
+        else if (tag === 'EVT') head.style.color = cssVar('--amber');
+        else if (tag === 'CMD') head.style.color = cssVar('--red');
+        else head.style.color = cssVar('--text0');
+
+        line.appendChild(head);
+        line.appendChild(document.createTextNode(msg));
+        el.terminal.appendChild(line);
+
+        while (el.terminal.children.length > 80) {
+          el.terminal.removeChild(el.terminal.firstChild);
+        }
+        el.terminal.scrollTop = el.terminal.scrollHeight;
+      }
+
+      function resetSimulation() {
+        altitude = 0;
+        missionSec = 0;
+        pktCount = 0;
+        altHistory = [];
+        timeHistory = [];
+        trackPoints = [];
+        simPhase = 0;
+        mainDeployed = false;
+        gyroRPM = 0;
+        currentState = 2;
+        launchLogged = false;
+        impactLogged = false;
+        simActivationAt = Date.now();
+        latest.descentRate = 0;
+        setStateDisplay(2);
+      }
+
+      function commandArm() {
+        armed = true;
+        simActive = true;
+        simPhase = 0;
+        currentState = 2;
+        setStateDisplay(2);
+        launchLogged = false;
+        impactLogged = false;
+        simActivationAt = Date.now();
+        setConnection(true);
+        addTerminalLine('CMD', 'ARM / START_TX — Telemetry armed. Awaiting launch.');
+      }
+
+      function commandStop() {
+        simActive = false;
+        addTerminalLine('CMD', 'STOP_TX — Telemetry halted.');
+      }
+
+      function commandCal() {
+        addTerminalLine('CMD', 'CAL ZERO — Barometer and gyro zeroed at ground level.');
+      }
+
+      function commandSimEnable() {
+        simEnabled = true;
+        addTerminalLine('CMD', 'SIM_ENABLE — Simulation mode enabled. Awaiting SIM_ACTIVATE.');
+      }
+
+      function commandSimActivate() {
+        resetSimulation();
+        simActive = true;
+        armed = true;
+        setConnection(true);
+        addTerminalLine('CMD', 'SIM_ACTIVATE — Simulation started. Launch in T-3s.');
+      }
+
+      document.getElementById('btnArm').addEventListener('click', commandArm);
+      document.getElementById('btnStop').addEventListener('click', commandStop);
+      document.getElementById('btnCal').addEventListener('click', commandCal);
+      document.getElementById('btnSimEnable').addEventListener('click', commandSimEnable);
+      document.getElementById('btnSimActivate').addEventListener('click', commandSimActivate);
+
+      var altChart = new Chart(document.getElementById('altChart').getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              data: [],
+              borderColor: '#ffaa00',
+              backgroundColor: 'rgba(255,170,0,0.08)',
+              borderWidth: 1.5,
+              pointRadius: 0,
+              tension: 0.3,
+              fill: true
+            },
+            {
+              data: [],
+              borderColor: 'rgba(0,232,122,0.5)',
+              borderDash: [4, 3],
+              borderWidth: 1,
+              pointRadius: 0,
+              tension: 0,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
+          },
+          scales: {
+            x: {
+              ticks: {
+                color: '#5a7a99',
+                maxTicksLimit: 8,
+                font: { family: 'Share Tech Mono', size: 9 }
+              },
+              grid: {
+                color: 'rgba(30,51,72,0.6)'
+              }
+            },
+            y: {
+              min: 0,
+              max: 1100,
+              ticks: {
+                color: '#5a7a99',
+                font: { family: 'Share Tech Mono', size: 9 },
+                callback: function (value) { return value + 'm'; }
+              },
+              grid: {
+                color: 'rgba(30,51,72,0.6)'
+              }
+            }
+          }
+        }
+      });
+
+      function updateChart() {
+        if (altHistory.length > 200) {
+          altHistory.shift();
+          timeHistory.shift();
+        }
+        altChart.data.labels = timeHistory.slice();
+        altChart.data.datasets[0].data = altHistory.slice();
+        altChart.data.datasets[1].data = altHistory.map(function () { return 600; });
+        altChart.update('none');
+      }
+
+      function aqiColor(aqi) {
+        if (aqi <= 50) return cssVar('--green');
+        if (aqi <= 100) return cssVar('--amber');
+        if (aqi <= 150) return cssVar('--orange');
+        if (aqi <= 200) return cssVar('--red');
+        return cssVar('--purple');
+      }
+
+      function aqiLabel(aqi) {
+        if (aqi <= 50) return 'GOOD';
+        if (aqi <= 100) return 'MODERATE';
+        if (aqi <= 150) return 'UNHEALTHY·SENS';
+        return 'UNHEALTHY';
+      }
+
+      function updateUI() {
+        el.pktTop.textContent = String(pktCount);
+        el.rssiText.textContent = rssi + ' dBm';
+        updateSignalBars();
+        el.metClock.textContent = 'MET ' + hhmmss(missionSec);
+
+        el.pitchVal.textContent = fmt(pitch3d, 1);
+        el.rollVal.textContent = fmt(roll3d, 1);
+        el.yawVal.textContent = fmt(yaw3d, 1);
+        el.axVal.textContent = fmt(latest.accelX, 2);
+        el.ayVal.textContent = fmt(latest.accelY, 2);
+        el.azVal.textContent = fmt(latest.accelZ, 2);
+
+        el.rpmBig.textContent = Math.round(gyroRPM).toLocaleString();
+        el.degSec.textContent = Math.round(gyroRPM * 6).toLocaleString() + ' deg/s';
+        if (gyroRPM > 100) {
+          el.spinStatus.textContent = '● SPINNING';
+          el.spinStatus.style.color = cssVar('--green');
+        } else {
+          el.spinStatus.textContent = '○ IDLE';
+          el.spinStatus.style.color = cssVar('--text2');
+        }
+
+        el.latVal.textContent = latest.lat.toFixed(6);
+        el.lonVal.textContent = latest.lon.toFixed(6);
+        el.gnssAltVal.textContent = latest.gnssAlt.toFixed(1) + ' m';
+        el.satsVal.textContent = String(latest.sats);
+        el.gnssTimeVal.textContent = latest.gnssTime;
+        el.distPadVal.textContent = latest.dist.toFixed(1) + ' m';
+        el.mapLock.textContent = 'LOCK · ' + latest.sats + '/12 SAT';
+
+        el.altBig.textContent = formatNum(altitude, 1);
+        var marker = latest.descentRate >= 0 ? '▲' : '▼';
+        var speedAbs = Math.abs(latest.descentRate);
+        var rateColor = latest.descentRate >= 0 ? cssVar('--green') : (speedAbs > 10 ? cssVar('--red') : cssVar('--green'));
+        el.descentRate.textContent = marker + ' ' + speedAbs.toFixed(1) + ' m/s';
+        el.descentRate.style.color = rateColor;
+
+        el.pressMini.textContent = Math.round(latest.pressure).toString();
+        el.tempMini.textContent = latest.temp.toFixed(1);
+        el.voltMini.textContent = latest.voltage.toFixed(2);
+        el.pktStateMini.textContent = pktCount + ' / S' + currentState;
+
+        var voltColor = latest.voltage > 3.7 ? cssVar('--green') : (latest.voltage >= 3.5 ? cssVar('--amber') : cssVar('--red'));
+        el.voltMini.style.color = voltColor;
+        el.envVolt.style.color = latest.voltage > 3.7 ? cssVar('--cyan') : (latest.voltage >= 3.5 ? cssVar('--amber') : cssVar('--red'));
+
+        el.envPressure.textContent = Math.round(latest.pressure).toString();
+        el.envTemp.textContent = latest.temp.toFixed(1);
+        el.envVolt.textContent = latest.voltage.toFixed(2);
+        el.envUv.textContent = latest.uv.toFixed(1);
+
+        el.pm1Val.textContent = latest.pm1.toFixed(1) + ' µg';
+        el.pm25Val.textContent = latest.pm25.toFixed(1) + ' µg';
+        el.pm4Val.textContent = latest.pm4.toFixed(1) + ' µg';
+        el.pm10Val.textContent = latest.pm10.toFixed(1) + ' µg';
+
+        el.pm1Bar.style.width = clamp((latest.pm1 / 50) * 100, 0, 100).toFixed(1) + '%';
+        el.pm25Bar.style.width = clamp((latest.pm25 / 100) * 100, 0, 100).toFixed(1) + '%';
+        el.pm4Bar.style.width = clamp((latest.pm4 / 120) * 100, 0, 100).toFixed(1) + '%';
+        el.pm10Bar.style.width = clamp((latest.pm10 / 150) * 100, 0, 100).toFixed(1) + '%';
+
+        el.co2Val.textContent = Math.round(latest.co2).toString();
+        var co2Pct = clamp((latest.co2 / 4000) * 100, 0, 100);
+        el.co2Bar.style.width = co2Pct.toFixed(1) + '%';
+        if (latest.co2 > 2400) {
+          el.co2Bar.style.background = cssVar('--red');
+        } else {
+          el.co2Bar.style.background = 'linear-gradient(90deg, ' + cssVar('--green2') + ' 0%, ' + cssVar('--amber') + ' 100%)';
+        }
+
+        el.scdTemp.textContent = latest.temp.toFixed(1) + '°C';
+        el.humidityVal.textContent = latest.humidity.toFixed(1) + '%';
+
+        el.no2Val.textContent = latest.no2.toFixed(3);
+        el.coVal.textContent = latest.co.toFixed(3);
+        el.no2Bar.style.width = clamp((latest.no2 / 0.2) * 100, 0, 100).toFixed(1) + '%';
+        el.coBar.style.width = clamp((latest.co / 10) * 100, 0, 100).toFixed(1) + '%';
+
+        var aColor = aqiColor(currentAQI);
+        el.aqiBig.textContent = Math.round(currentAQI).toString();
+        el.aqiBig.style.color = aColor;
+        el.aqiLabel.textContent = aqiLabel(currentAQI);
+        el.aqiLabel.style.color = aColor;
+        el.aqiRaw.textContent = 'Raw: ' + Math.round(260 + currentAQI * 1.24) + ' ADC · ' + (0.45 + currentAQI / 300).toFixed(2) + 'V';
+      }
+
+      function csvLine() {
+        var stamp = hhmmss(missionSec);
+        var accelData = latest.accelX.toFixed(2) + '|' + latest.accelY.toFixed(2) + '|' + latest.accelZ.toFixed(2);
+        return [
+          'BU-ASTRO-CAN7',
+          stamp,
+          pktCount,
+          altitude.toFixed(1),
+          Math.round(latest.pressure),
+          latest.temp.toFixed(2),
+          latest.voltage.toFixed(2),
+          latest.gnssTime,
+          latest.lat.toFixed(6),
+          latest.lon.toFixed(6),
+          latest.gnssAlt.toFixed(1),
+          latest.sats,
+          accelData,
+          Math.round(gyroRPM),
+          currentState,
+          latest.optionalData
+        ].join(',');
+      }
+
+      function simTick() {
+        if (armed) {
+          missionSec += 1;
+        }
+
+        if (!simActive) {
+          updateUI();
+          return;
+        }
+
+        pktCount += 1;
+
+        if (simActivationAt && Date.now() - simActivationAt >= 3000 && simPhase === 0) {
+          simPhase = 1;
+          currentState = 3;
+          setStateDisplay(3);
+          if (!launchLogged) {
+            addTerminalLine('EVT', 'ASCENT DETECTED — Accel > 3G');
+            launchLogged = true;
+          }
+        }
+
+        if (simPhase === 0) {
+          altitude = 0;
+          currentState = 2;
+          setStateDisplay(2);
+          latest.descentRate = 0;
+        } else if (simPhase === 1) {
+          var rise = rand(60, 70) + rand(-3, 3);
+          altitude = clamp(altitude + rise, 0, 1100);
+          latest.descentRate = rise;
+          currentState = 3;
+          setStateDisplay(3);
+          if (missionSec >= 13 || altitude >= 980) {
+            simPhase = 2;
+            currentState = 4;
+            setStateDisplay(4);
+            addTerminalLine('EVT', 'ROCKET_DEPLOY — Drogue deployed passively');
+          }
+        } else if (simPhase === 2) {
+          currentState = 5;
+          setStateDisplay(5);
+          var dropFast = rand(18, 22);
+          altitude = clamp(altitude - dropFast, 0, 1100);
+          latest.descentRate = -dropFast;
+          gyroRPM = clamp(gyroRPM + 70, 0, 8500);
+          if (!mainDeployed && altitude <= 600) {
+            mainDeployed = true;
+            simPhase = 3;
+            currentState = 6;
+            setStateDisplay(6);
+            addTerminalLine('EVT', 'STATE 6: AEROBREAK_RELEASE — Main chute deployed @600m');
+          }
+        } else if (simPhase === 3) {
+          currentState = 6;
+          setStateDisplay(6);
+          var dropSlow = rand(2.0, 2.8);
+          altitude = clamp(altitude - dropSlow, 0, 1100);
+          latest.descentRate = -dropSlow;
+          gyroRPM = clamp(gyroRPM + rand(0, 8), 0, 8500);
+          if (altitude < 20) {
+            simPhase = 4;
+            currentState = 7;
+            setStateDisplay(7);
+            altitude = 0;
+          }
+        } else if (simPhase === 4) {
+          altitude = 0;
+          latest.descentRate = 0;
+          currentState = 7;
+          setStateDisplay(7);
+          gyroRPM = clamp(gyroRPM - rand(120, 260), 0, 8500);
+          if (!impactLogged) {
+            addTerminalLine('EVT', 'STATE 7: IMPACT — Beacon activated');
+            impactLogged = true;
+          }
+        }
+
+        var temp = 28.5 - altitude * 0.0065 + rand(-0.3, 0.3);
+        var pressure = 101325 * Math.pow(1 - altitude * 2.256e-5, 5.255);
+        var voltage = clamp(4.08 - altitude / 50000 - tick * 0.00005 + rand(-0.02, 0.02), 3.2, 4.2);
+        var lat = 28.4506 + altitude * 0.00001 + tick * 0.000002;
+        var lon = 77.5855 + altitude * 0.000008 + tick * 0.0000015;
+        var gnssAlt = altitude + 208.0;
+        var uv = clamp(3.2 + altitude * 0.003 + rand(-0.2, 0.2), 0, 12);
+        var co2 = clamp(1420 - altitude * 0.3 + rand(-20, 20), 400, 4200);
+        var pm25 = clamp(18.4 + altitude * 0.01 + rand(-2, 2), 0, 180);
+        var pm10 = clamp(35.8 + altitude * 0.015 + rand(-3, 3), 0, 220);
+        var pm1 = pm25 * 0.45;
+        var pm4 = pm25 * 1.4;
+        var no2 = clamp(0.048 + altitude * 0.00003 + rand(-0.005, 0.005), 0, 0.3);
+        var co = clamp(1.24 + altitude * 0.0005 + rand(-0.1, 0.1), 0, 12);
+        currentAQI = clamp(42 + altitude * 0.02 + rand(-3, 3), 20, 300);
+        var humidity = clamp(54.6 - altitude * 0.005 + rand(-0.5, 0.5), 5, 95);
+
+        pitch3d = 2 * Math.sin(tick * 0.05) + rand(-1, 1);
+        roll3d = 1.5 * Math.cos(tick * 0.04) + rand(-0.8, 0.8);
+        yaw3d = (tick * 2) % 360;
+
+        latest.accelX = Math.sin(tick * 0.07) * 0.5 + rand(-0.2, 0.2);
+        latest.accelY = rand(-0.4, 0.4);
+        latest.accelZ = 9.81 + rand(-0.3, 0.3);
+
+        latest.temp = temp;
+        latest.pressure = pressure;
+        latest.voltage = voltage;
+        latest.lat = lat;
+        latest.lon = lon;
+        latest.gnssAlt = gnssAlt;
+        latest.sats = clamp(9 + Math.round(rand(-1, 2)), 7, 12);
+        latest.uv = uv;
+        latest.co2 = co2;
+        latest.pm1 = pm1;
+        latest.pm25 = pm25;
+        latest.pm4 = pm4;
+        latest.pm10 = pm10;
+        latest.no2 = no2;
+        latest.co = co;
+        latest.humidity = humidity;
+        latest.state = currentState;
+        latest.gnssTime = hhmmss(missionSec);
+        latest.dist = Math.sqrt(Math.pow((lat - 28.4506) * 111139, 2) + Math.pow((lon - 77.5855) * 111139, 2));
+
+        altHistory.push(altitude);
+        timeHistory.push('T+' + missionSec + 's');
+        if (altHistory.length > 200) {
+          altHistory.shift();
+          timeHistory.shift();
+        }
+
+        var mx = mapCanvas.width / 2 + (lon - 77.5855) * 32000;
+        var my = mapCanvas.height / 2 - (lat - 28.4506) * 32000;
+        trackPoints.push({ x: mx, y: my });
+        if (trackPoints.length > 200) {
+          trackPoints.shift();
+        }
+
+        rssi = Math.round(clamp(-72 + rand(-8, 6), -98, -56));
+
+        setConnection(true);
+        updateChart();
+        updateUI();
+        addTerminalLine('RX', csvLine());
+      }
+
+      function drawCanSat() {
+        var w = canSatCanvas.width;
+        var h = canSatCanvas.height;
+        var cx = w * 0.28;
+        var cy = h * 0.55;
+        var rollRad = roll3d * 0.3 * Math.PI / 180;
+
+        canCtx.fillStyle = cssVar('--canvasbg');
+        canCtx.fillRect(0, 0, w, h);
+
+        canCtx.lineWidth = 0.5;
+        canCtx.strokeStyle = 'rgba(0,80,60,0.3)';
+        for (var gx = 0; gx <= w; gx += 20) {
+          canCtx.beginPath();
+          canCtx.moveTo(gx, 0);
+          canCtx.lineTo(gx, h);
+          canCtx.stroke();
+        }
+        for (var gy = 0; gy <= h; gy += 20) {
+          canCtx.beginPath();
+          canCtx.moveTo(0, gy);
+          canCtx.lineTo(w, gy);
+          canCtx.stroke();
+        }
+
+        canCtx.save();
+        canCtx.translate(cx, cy);
+        canCtx.rotate(rollRad);
+
+        var bodyH = 58 + clamp(pitch3d, -20, 20) * 0.4;
+        var bodyW = 22 + clamp(roll3d, -15, 15) * 0.2;
+        var bx = -bodyW / 2;
+        var by = -bodyH / 2;
+
+        canCtx.fillStyle = 'rgba(255,100,30,0.15)';
+        canCtx.strokeStyle = cssVar('--orange');
+        canCtx.lineWidth = 1.5;
+        roundRect(canCtx, bx, by, bodyW, bodyH, 8, true, true);
+
+        canCtx.strokeStyle = 'rgba(255,107,43,0.4)';
+        canCtx.lineWidth = 0.8;
+        for (var r = 1; r <= 4; r += 1) {
+          var y = by + (bodyH / 5) * r;
+          canCtx.beginPath();
+          canCtx.moveTo(bx + 2, y);
+          canCtx.lineTo(bx + bodyW - 2, y);
+          canCtx.stroke();
+        }
+
+        canCtx.beginPath();
+        canCtx.fillStyle = 'rgba(0,212,255,0.12)';
+        canCtx.strokeStyle = cssVar('--cyan');
+        canCtx.lineWidth = 1;
+        canCtx.ellipse(0, by + 1, bodyW * 0.55, 6, 0, 0, Math.PI * 2);
+        canCtx.fill();
+        canCtx.stroke();
+
+        canCtx.beginPath();
+        canCtx.strokeStyle = 'rgba(255,170,0,0.7)';
+        canCtx.lineWidth = 2;
+        canCtx.arc(0, by + bodyH * 0.55, 8, 0, Math.PI * 2);
+        canCtx.stroke();
+
+        canCtx.strokeStyle = 'rgba(0,232,122,0.5)';
+        canCtx.lineWidth = 0.7;
+        canCtx.beginPath();
+        canCtx.moveTo(-4, by - 3);
+        canCtx.lineTo(-9, by - 14);
+        canCtx.moveTo(4, by - 3);
+        canCtx.lineTo(9, by - 14);
+        canCtx.stroke();
+
+        canCtx.restore();
+
+        drawAttitudeIndicator();
+
+        canCtx.fillStyle = cssVar('--text2');
+        canCtx.font = '9px "Share Tech Mono"';
+        canCtx.fillText('X', 5, 10);
+        canCtx.fillText('Z', w - 10, 10);
+      }
+
+      function drawAttitudeIndicator() {
+        var cx = canSatCanvas.width * 0.78;
+        var cy = canSatCanvas.height * 0.53;
+        var radius = 38;
+        var rollRad = roll3d * Math.PI / 180;
+        var pitchOffset = clamp((pitch3d / 90) * radius, -radius, radius);
+
+        canCtx.save();
+        canCtx.translate(cx, cy);
+
+        canCtx.beginPath();
+        canCtx.strokeStyle = cssVar('--border');
+        canCtx.lineWidth = 1;
+        canCtx.arc(0, 0, radius, 0, Math.PI * 2);
+        canCtx.stroke();
+
+        canCtx.save();
+        canCtx.beginPath();
+        canCtx.arc(0, 0, radius - 1, 0, Math.PI * 2);
+        canCtx.clip();
+        canCtx.rotate(rollRad);
+
+        canCtx.fillStyle = 'rgba(0,212,255,0.2)';
+        canCtx.fillRect(-radius * 2, -radius * 2 + pitchOffset, radius * 4, radius * 2);
+
+        canCtx.fillStyle = 'rgba(255,107,43,0.25)';
+        canCtx.fillRect(-radius * 2, pitchOffset, radius * 4, radius * 2);
+
+        canCtx.beginPath();
+        canCtx.moveTo(-radius * 2, pitchOffset);
+        canCtx.lineTo(radius * 2, pitchOffset);
+        canCtx.strokeStyle = 'rgba(255,255,255,0.5)';
+        canCtx.lineWidth = 1;
+        canCtx.stroke();
+        canCtx.restore();
+
+        canCtx.strokeStyle = cssVar('--amber');
+        canCtx.lineWidth = 1.5;
+        canCtx.beginPath();
+        canCtx.moveTo(-10, 0);
+        canCtx.lineTo(-3, 0);
+        canCtx.moveTo(3, 0);
+        canCtx.lineTo(10, 0);
+        canCtx.moveTo(0, -6);
+        canCtx.lineTo(0, -1);
+        canCtx.stroke();
+
+        canCtx.beginPath();
+        canCtx.setLineDash([4, 3]);
+        canCtx.strokeStyle = 'rgba(0,212,255,0.3)';
+        canCtx.lineWidth = 0.5;
+        canCtx.arc(0, 0, radius, 0, Math.PI * 2);
+        canCtx.stroke();
+        canCtx.setLineDash([]);
+
+        canCtx.restore();
+      }
+
+      function drawGyro(rpm) {
+        var w = gyroCanvas.width;
+        var h = gyroCanvas.height;
+        var cx = w / 2;
+        var cy = h / 2;
+        var r = 28;
+
+        gyroCtx.fillStyle = cssVar('--canvasbg');
+        gyroCtx.fillRect(0, 0, w, h);
+
+        gyroCtx.beginPath();
+        gyroCtx.strokeStyle = cssVar('--border');
+        gyroCtx.lineWidth = 4;
+        gyroCtx.arc(cx, cy, r, 0, Math.PI * 2);
+        gyroCtx.stroke();
+
+        var frac = clamp(rpm / 12000, 0, 1);
+        var color = cssVar('--green');
+        if (rpm >= 6000 && rpm <= 9000) color = cssVar('--amber');
+        if (rpm > 9000) color = cssVar('--red');
+
+        gyroCtx.beginPath();
+        gyroCtx.strokeStyle = color;
+        gyroCtx.lineWidth = 4;
+        gyroCtx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2);
+        gyroCtx.stroke();
+
+        gyroCtx.save();
+        gyroCtx.translate(cx, cy);
+        gyroCtx.rotate(gyroAngle);
+        gyroCtx.strokeStyle = 'rgba(255,170,0,0.5)';
+        gyroCtx.lineWidth = 1;
+        for (var i = 0; i < 4; i += 1) {
+          gyroCtx.rotate(Math.PI / 2);
+          gyroCtx.beginPath();
+          gyroCtx.moveTo(0, 0);
+          gyroCtx.lineTo(0, -19);
+          gyroCtx.stroke();
+        }
+        gyroCtx.restore();
+
+        gyroCtx.fillStyle = cssVar('--amber');
+        gyroCtx.font = 'bold 9px "Share Tech Mono"';
+        gyroCtx.textAlign = 'center';
+        gyroCtx.textBaseline = 'middle';
+        gyroCtx.fillText(Math.round(rpm).toString(), cx, cy);
+      }
+
+      function drawAQI(aqi) {
+        var w = aqiCanvas.width;
+        var h = aqiCanvas.height;
+        var cx = w / 2;
+        var cy = h / 2;
+        var r = 28;
+
+        aqiCtx.fillStyle = cssVar('--canvasbg');
+        aqiCtx.fillRect(0, 0, w, h);
+
+        var s = -0.75 * Math.PI;
+        var e = 0.75 * Math.PI;
+
+        aqiCtx.beginPath();
+        aqiCtx.lineWidth = 5;
+        aqiCtx.strokeStyle = cssVar('--border');
+        aqiCtx.arc(cx, cy, r, s, e, false);
+        aqiCtx.stroke();
+
+        var sweep = clamp(aqi / 300, 0, 1) * (e - s);
+        aqiCtx.beginPath();
+        aqiCtx.lineWidth = 5;
+        aqiCtx.strokeStyle = aqiColor(aqi);
+        aqiCtx.arc(cx, cy, r, s, s + sweep, false);
+        aqiCtx.stroke();
+      }
+
+      function drawMap() {
+        var w = mapCanvas.width;
+        var h = mapCanvas.height;
+
+        mapCtx.fillStyle = cssVar('--canvasbg');
+        mapCtx.fillRect(0, 0, w, h);
+
+        mapCtx.strokeStyle = 'rgba(30,51,72,0.4)';
+        mapCtx.lineWidth = 0.5;
+        for (var gx = 0; gx <= w; gx += 15) {
+          mapCtx.beginPath();
+          mapCtx.moveTo(gx, 0);
+          mapCtx.lineTo(gx, h);
+          mapCtx.stroke();
+        }
+        for (var gy = 0; gy <= h; gy += 15) {
+          mapCtx.beginPath();
+          mapCtx.moveTo(0, gy);
+          mapCtx.lineTo(w, gy);
+          mapCtx.stroke();
+        }
+
+        if (trackPoints.length > 1) {
+          mapCtx.beginPath();
+          mapCtx.strokeStyle = 'rgba(0,212,255,0.6)';
+          mapCtx.lineWidth = 1.5;
+          mapCtx.moveTo(trackPoints[0].x, trackPoints[0].y);
+          for (var i = 1; i < trackPoints.length; i += 1) {
+            mapCtx.lineTo(trackPoints[i].x, trackPoints[i].y);
+          }
+          mapCtx.stroke();
+        }
+
+        var ox = w / 2;
+        var oy = h / 2;
+        mapCtx.strokeStyle = 'rgba(0,232,122,0.5)';
+        mapCtx.lineWidth = 1;
+        mapCtx.beginPath();
+        mapCtx.moveTo(ox - 6, oy);
+        mapCtx.lineTo(ox + 6, oy);
+        mapCtx.moveTo(ox, oy - 6);
+        mapCtx.lineTo(ox, oy + 6);
+        mapCtx.stroke();
+        mapCtx.beginPath();
+        mapCtx.arc(ox, oy, 10, 0, Math.PI * 2);
+        mapCtx.stroke();
+
+        if (trackPoints.length > 0) {
+          var p = trackPoints[trackPoints.length - 1];
+          mapCtx.fillStyle = cssVar('--cyan');
+          mapCtx.beginPath();
+          mapCtx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+          mapCtx.fill();
+
+          mapCtx.strokeStyle = 'rgba(0,212,255,0.3)';
+          mapCtx.beginPath();
+          mapCtx.arc(p.x, p.y, 8 + Math.sin(tick * 0.12) * 1.2, 0, Math.PI * 2);
+          mapCtx.stroke();
+        }
+
+        mapCtx.fillStyle = cssVar('--text2');
+        mapCtx.font = '9px "Share Tech Mono"';
+        mapCtx.fillText('N', w - 10, 10);
+      }
+
+      function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+        var r = radius;
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + width - r, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+        ctx.lineTo(x + width, y + height - r);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+        ctx.lineTo(x + r, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+        if (fill) ctx.fill();
+        if (stroke) ctx.stroke();
+      }
+
+      function rafLoop() {
+        tick += 1;
+        gyroAngle += gyroRPM * 0.001;
+
+        drawCanSat();
+        drawGyro(gyroRPM);
+        drawAQI(currentAQI);
+        drawMap();
+
+        requestAnimationFrame(rafLoop);
+      }
+
+      function initTerminal() {
+        addTerminalLine('GS', 'CAN-7USAT Ground Station v3.0 — Bennett University Astronomy Club');
+        addTerminalLine('GS', 'XBee Pro S2C · PANID: BU-ASTRO-2026 · 115200 baud');
+        addTerminalLine('GS', 'Mission file: Flight_BU-ASTRO-CAN7.csv — auto-logging active');
+        addTerminalLine('GS', 'Press SIM_ACTIVATE to run full descent simulation.');
+      }
+
+      setStateDisplay(2);
+      drawCanSat();
+      drawGyro(0);
+      drawAQI(42);
+      drawMap();
+      updateSignalBars();
+      updateUI();
+      initTerminal();
+
+      requestAnimationFrame(rafLoop);
+      setInterval(simTick, 1000);
+    })();
+  </script>
+</body>
 </html>

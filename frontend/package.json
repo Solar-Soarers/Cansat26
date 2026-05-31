@@ -1,33 +1,79 @@
 {
-  "name": "cansat26",
+  "name": "inspace-gs",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
-  "main": "src/electron/main",
+  "main": "electron/main.js",
   "scripts": {
-    "dev:react": "vite",
-    "dev:electron": "electron .",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron": "electron .",
+    "electron:dev": "concurrently \"vite\" \"electron .\"",
+    "electron:build": "vite build && electron-builder",
+    "electron:pack": "electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "dist:dir": "npm run build && electron-builder --dir"
   },
   "dependencies": {
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "@serialport/parser-readline": "^12.0.0",
+    "date-fns": "^3.6.0",
+    "electron-store": "^9.0.0",
+    "leaflet": "^1.9.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
+    "recharts": "^2.15.0",
+    "serialport": "^12.0.0",
+    "ws": "^8.17.1",
+    "zustand": "^4.5.4"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@types/node": "^24.12.3",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "electron": "^42.2.0",
-    "eslint": "^10.3.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.6.0",
-    "typescript": "~6.0.2",
-    "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.12"
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^9.0.1",
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
+    "vite": "^5.4.10"
+  },
+  "build": {
+    "appId": "in.inspace.cansat-gs",
+    "productName": "INSpace CanSat GS",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend/",
+        "to": "backend/",
+        "filter": [
+          "**/*.py"
+        ]
+      },
+      {
+        "from": "../requirements.txt",
+        "to": "requirements.txt"
+      }
+    ],
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Utility"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
