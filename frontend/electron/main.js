@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const store = new Store({
   defaults: {
-    comPort: 'COM4',
+    comPort: null,
     baudRate: 115200,
     filterAlpha: 0.97,
     kp: 1.2,
@@ -31,7 +31,11 @@ async function startSerialFallback(portPath = null) {
     return;
   }
   const ports = await listPorts();
-  const targetPort = portPath || store.get('comPort') || ports[0]?.path;
+  let targetPort = portPath || store.get('comPort') || ports[0]?.path;
+  // If stored port isn't present in the current ports list, ignore it and use the first available
+  if (targetPort && !ports.some((p) => p.path === targetPort)) {
+    targetPort = ports[0]?.path;
+  }
   if (!targetPort) {
     return;
   }
@@ -132,7 +136,8 @@ function startTelemetry() {
   }
   wsClient = createWsClient({
     url: 'ws://localhost:8765',
-    useMock: Boolean(process.env.INSPACE_GS_MOCK),
+    // Use mock telemetry by default during development to avoid serial/connect errors
+    useMock: !app.isPackaged || Boolean(process.env.INSPACE_GS_MOCK),
     onPacket: forwardPacket,
     onStatus: (status) => {
       forwardStatus(status);
