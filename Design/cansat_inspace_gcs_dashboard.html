@@ -1,0 +1,836 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg0:#070b0f;--bg1:#0c1219;--bg2:#111a24;--bg3:#162030;--bg4:#1c2b3a;
+  --cyan:#00d4ff;--cyan2:#00a8cc;--cyan3:#007a99;
+  --amber:#ffaa00;--amber2:#cc8800;--amber3:#805500;
+  --green:#00e87a;--green2:#00b85f;--green3:#006e39;
+  --red:#ff3b3b;--red2:#cc2a2a;
+  --orange:#ff6b2b;
+  --purple:#a855f7;
+  --text0:#e8f4ff;--text1:#9bb5cc;--text2:#5a7a99;
+  --border:#1e3348;--border2:#2a4a66;
+  --mono:'Share Tech Mono',monospace;
+  --ui:'Rajdhani',sans-serif;
+}
+body{background:var(--bg0);color:var(--text0);font-family:var(--ui);font-size:13px;line-height:1.4;overflow-x:hidden}
+.gcs-root{display:flex;flex-direction:column;height:100vh;min-height:700px}
+
+/* ── TOP HEADER ── */
+.hdr{background:var(--bg1);border-bottom:1px solid var(--border);padding:0 10px;display:flex;align-items:center;gap:8px;height:46px;flex-shrink:0;flex-wrap:wrap}
+.hdr-logo{font-family:var(--ui);font-weight:700;font-size:14px;color:var(--cyan);letter-spacing:2px;white-space:nowrap}
+.hdr-sep{width:1px;height:24px;background:var(--border2);flex-shrink:0}
+.conn-badge{display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:3px 8px}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse-dot 2s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+.conn-text{font-family:var(--mono);font-size:10px;color:var(--green)}
+.rssi-block{display:flex;align-items:center;gap:5px}
+.rssi-label{font-family:var(--mono);font-size:10px;color:var(--text2)}
+.rssi-val{font-family:var(--mono);font-size:10px;color:var(--cyan)}
+.sig-bars{display:flex;align-items:flex-end;gap:2px;height:14px}
+.sig-bars span{width:3px;background:var(--border2);border-radius:1px}
+.sig-bars span.on{background:var(--green)}
+.pkt-block{font-family:var(--mono);font-size:10px;color:var(--text1);white-space:nowrap}
+.pkt-block b{color:var(--cyan)}
+.state-badge{background:var(--bg3);border:1px solid var(--amber);border-radius:4px;padding:3px 10px;font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:1px;white-space:nowrap}
+.hdr-spacer{flex:1}
+.cmd-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:4px 10px;font-family:var(--mono);font-size:10px;color:var(--text1);cursor:pointer;letter-spacing:.5px;transition:all .15s;white-space:nowrap}
+.cmd-btn:hover{border-color:var(--cyan2);color:var(--cyan)}
+.cmd-btn.arm{border-color:var(--green3);color:var(--green)}
+.cmd-btn.arm:hover{background:rgba(0,232,122,.1)}
+.cmd-btn.stop{border-color:var(--red2);color:var(--red)}
+.cmd-btn.stop:hover{background:rgba(255,59,59,.1)}
+.cmd-btn.sim{border-color:var(--purple);color:var(--purple)}
+.cmd-btn.sim:hover{background:rgba(168,85,247,.1)}
+.mission-time{font-family:var(--mono);font-size:12px;color:var(--amber);letter-spacing:1px;white-space:nowrap}
+
+/* ── BODY GRID ── */
+.body{display:grid;grid-template-columns:260px 1fr 248px;flex:1;overflow:hidden;gap:0}
+
+/* ── PANEL BASE ── */
+.panel{background:var(--bg1);overflow-y:auto;overflow-x:hidden;border-right:1px solid var(--border)}
+.panel:last-child{border-right:none}
+.section{background:var(--bg2);margin:8px;border-radius:6px;border:1px solid var(--border);padding:10px}
+.sec-title{font-family:var(--ui);font-weight:700;font-size:11px;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sec-title::before{content:'';width:8px;height:8px;border:1.5px solid var(--cyan);border-radius:1px;display:inline-block;flex-shrink:0}
+
+/* ── LEFT PANEL ── */
+#panel-left{}
+
+/* Orientation 3D */
+.orientation-3d{position:relative;height:120px;background:var(--bg0);border-radius:4px;overflow:hidden;margin-bottom:8px;border:1px solid var(--border)}
+#canSatCanvas{width:100%;height:100%}
+.att-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:6px}
+.att-item{background:var(--bg3);border-radius:3px;padding:5px 6px;text-align:center}
+.att-label{font-family:var(--ui);font-size:10px;color:var(--text2);letter-spacing:1px}
+.att-val{font-family:var(--mono);font-size:13px;color:var(--cyan);margin-top:1px}
+.att-unit{font-family:var(--mono);font-size:9px;color:var(--text2)}
+
+/* Gyro */
+.gyro-ring-wrap{display:flex;align-items:center;gap:10px;padding:4px 0}
+#gyroCanvas{flex-shrink:0}
+.gyro-vals{flex:1}
+.gyro-rpm{font-family:var(--mono);font-size:20px;color:var(--amber);line-height:1}
+.gyro-rpm-unit{font-family:var(--mono);font-size:11px;color:var(--text2)}
+.gyro-status{font-family:var(--ui);font-size:11px;color:var(--green);letter-spacing:1px;margin-top:2px}
+.gyro-degs{font-family:var(--mono);font-size:11px;color:var(--text1);margin-top:2px}
+
+/* GNSS map */
+.map-container{background:var(--bg0);border-radius:4px;overflow:hidden;border:1px solid var(--border);height:90px;position:relative;margin-bottom:8px}
+#mapCanvas{width:100%;height:100%}
+.map-overlay{position:absolute;top:4px;left:4px;font-family:var(--mono);font-size:9px;color:var(--cyan);background:rgba(0,0,0,.6);padding:2px 5px;border-radius:2px}
+.gnss-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.gnss-cell{background:var(--bg3);border-radius:3px;padding:5px 7px}
+.gnss-lbl{font-family:var(--ui);font-size:10px;color:var(--text2);letter-spacing:.5px}
+.gnss-val{font-family:var(--mono);font-size:11px;color:var(--text0);margin-top:1px}
+.gnss-val.highlight{color:var(--cyan)}
+
+/* ── CENTER PANEL ── */
+#panel-center{border-right:1px solid var(--border)}
+.altitude-header{display:flex;align-items:flex-end;gap:8px;margin-bottom:10px}
+.alt-big{font-family:var(--mono);font-size:42px;color:var(--amber);line-height:1;letter-spacing:-1px}
+.alt-unit{font-family:var(--mono);font-size:16px;color:var(--text2);margin-bottom:6px}
+.alt-rate{font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:6px;margin-left:4px}
+.chart-wrap{position:relative;width:100%;height:200px}
+.phase-label{position:absolute;font-family:var(--mono);font-size:9px;pointer-events:none}
+.phase-drogue{top:4px;color:var(--cyan)}
+.phase-main{color:var(--green)}
+/* terminal */
+.terminal{background:#000;border-radius:4px;border:1px solid var(--border);font-family:var(--mono);font-size:10px;color:#4ade80;height:140px;overflow-y:auto;padding:6px 8px}
+.terminal-line{margin-bottom:2px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.terminal-line.new{color:#fff;animation:term-fade 1s ease forwards}
+@keyframes term-fade{0%{color:#fff}100%{color:#4ade80}}
+.terminal-prompt{color:var(--cyan2);margin-right:4px}
+/* state indicators */
+.states-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.state-chip{font-family:var(--mono);font-size:9px;padding:3px 6px;border-radius:3px;border:1px solid var(--border);color:var(--text2);letter-spacing:.5px}
+.state-chip.active{border-color:var(--amber);color:var(--amber);background:rgba(255,170,0,.08)}
+/* key telemetry row */
+.telem-row{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px}
+.telem-card{background:var(--bg3);border-radius:4px;padding:6px 8px;border:1px solid var(--border)}
+.telem-lbl{font-family:var(--ui);font-size:10px;color:var(--text2);letter-spacing:.5px}
+.telem-val{font-family:var(--mono);font-size:15px;color:var(--text0);line-height:1.2;margin-top:2px}
+.telem-val.warn{color:var(--amber)}
+.telem-val.ok{color:var(--green)}
+.telem-val.danger{color:var(--red)}
+
+/* ── RIGHT PANEL ── */
+#panel-right{background:var(--bg1)}
+.enviro-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:0}
+.env-card{background:var(--bg3);border-radius:4px;padding:6px 8px;border:1px solid var(--border)}
+.env-lbl{font-family:var(--ui);font-size:10px;color:var(--text2);letter-spacing:.5px}
+.env-val{font-family:var(--mono);font-size:16px;color:var(--cyan);line-height:1.1;margin-top:2px}
+.env-val.hot{color:var(--orange)}
+.env-val.warn{color:var(--amber)}
+.env-unit{font-family:var(--mono);font-size:10px;color:var(--text2)}
+/* PM bars */
+.pm-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.pm-label{font-family:var(--mono);font-size:10px;color:var(--text2);width:36px;flex-shrink:0}
+.pm-bar-bg{flex:1;height:8px;background:var(--bg0);border-radius:4px;overflow:hidden}
+.pm-bar-fill{height:100%;border-radius:4px;transition:width 1s ease}
+.pm-val{font-family:var(--mono);font-size:10px;color:var(--text1);width:40px;text-align:right;flex-shrink:0}
+/* CO2 */
+.co2-meter{display:flex;align-items:center;gap:6px;padding:4px 0}
+.co2-bar-bg{flex:1;height:10px;background:var(--bg0);border-radius:5px;overflow:hidden;position:relative}
+.co2-bar-fill{height:100%;border-radius:5px;transition:width 1.5s ease}
+.co2-warning-line{position:absolute;top:0;bottom:0;width:1px;background:var(--red);opacity:.6}
+.co2-val{font-family:var(--mono);font-size:12px;color:var(--amber)}
+.co2-unit{font-family:var(--mono);font-size:9px;color:var(--text2)}
+/* MiCS gas */
+.gas-row{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:4px}
+.gas-card{background:var(--bg0);border-radius:3px;padding:6px 7px;border:1px solid var(--border)}
+.gas-label{font-family:var(--ui);font-size:10px;color:var(--text2);letter-spacing:.5px}
+.gas-val{font-family:var(--mono);font-size:14px;color:var(--cyan);margin-top:2px}
+.gas-unit{font-family:var(--mono);font-size:9px;color:var(--text2)}
+/* AQI gauge */
+.aqi-wrap{display:flex;align-items:center;gap:10px;padding:4px 0}
+#aqiCanvas{flex-shrink:0}
+.aqi-info{flex:1}
+.aqi-number{font-family:var(--mono);font-size:28px;line-height:1;color:var(--green)}
+.aqi-label{font-family:var(--ui);font-size:11px;color:var(--green);letter-spacing:1px}
+.aqi-sub{font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:2px}
+/* SCD41 */
+.scd-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.scd-cell{background:var(--bg0);border-radius:3px;padding:5px 7px;border:1px solid var(--border)}
+.scd-lbl{font-family:var(--ui);font-size:10px;color:var(--text2)}
+.scd-val{font-family:var(--mono);font-size:13px;color:var(--text0);margin-top:1px}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:var(--bg1)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* Parachute event indicator */
+.event-marker{position:absolute;border-left:1.5px dashed rgba(0,232,122,.5);top:0;bottom:0;pointer-events:none}
+.event-label{position:absolute;font-family:var(--mono);font-size:9px;color:var(--green);top:2px;left:3px}
+</style>
+
+<div class="gcs-root">
+  <!-- HEADER -->
+  <div class="hdr">
+    <span class="hdr-logo">◆ INSPACE · CAN-7USAT</span>
+    <div class="hdr-sep"></div>
+    <div class="conn-badge">
+      <span class="conn-dot" id="connDot"></span>
+      <span class="conn-text" id="connText">CONNECTED</span>
+    </div>
+    <div class="hdr-sep"></div>
+    <div class="rssi-block">
+      <span class="rssi-label">RSSI</span>
+      <span class="rssi-val" id="rssiVal">-72 dBm</span>
+      <div class="sig-bars" id="sigBars">
+        <span style="height:4px" class="on"></span>
+        <span style="height:6px" class="on"></span>
+        <span style="height:9px" class="on"></span>
+        <span style="height:12px" class="on"></span>
+        <span style="height:14px"></span>
+      </div>
+    </div>
+    <div class="hdr-sep"></div>
+    <div class="pkt-block">PKT: <b id="pktCount">0</b></div>
+    <div class="pkt-block" style="margin-left:8px">TEAM: <b style="color:var(--cyan)">BU-ASTRO-CAN7</b></div>
+    <div class="hdr-sep"></div>
+    <div class="state-badge" id="stateLabel">STATE 2 · LAUNCH_PAD</div>
+    <div class="mission-time" id="missionTime">MET 00:00:00</div>
+    <div class="hdr-spacer"></div>
+    <button class="cmd-btn arm" onclick="cmdArm()">ARM / START_TX</button>
+    <button class="cmd-btn stop" onclick="cmdStop()">STOP_TX</button>
+    <button class="cmd-btn" onclick="cmdCal()">CAL ZERO</button>
+    <button class="cmd-btn sim" onclick="cmdSimEn()">SIM_ENABLE</button>
+    <button class="cmd-btn sim" onclick="cmdSimAct()">SIM_ACTIVATE</button>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+    <!-- ──────── LEFT PANEL ──────── -->
+    <div class="panel" id="panel-left">
+      <!-- Orientation -->
+      <div class="section">
+        <div class="sec-title">Orientation · BNO055</div>
+        <div class="orientation-3d"><canvas id="canSatCanvas" width="244" height="120"></canvas></div>
+        <div class="att-grid">
+          <div class="att-item"><div class="att-label">PITCH</div><div class="att-val" id="pitchVal">0.0</div><div class="att-unit">°</div></div>
+          <div class="att-item"><div class="att-label">ROLL</div><div class="att-val" id="rollVal">0.0</div><div class="att-unit">°</div></div>
+          <div class="att-item"><div class="att-label">YAW</div><div class="att-val" id="yawVal">0.0</div><div class="att-unit">°</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:4px">
+          <div class="att-item"><div class="att-label">AX</div><div class="att-val" id="axVal" style="font-size:11px;color:var(--text1)">0.00</div><div class="att-unit">m/s²</div></div>
+          <div class="att-item"><div class="att-label">AY</div><div class="att-val" id="ayVal" style="font-size:11px;color:var(--text1)">0.00</div><div class="att-unit">m/s²</div></div>
+          <div class="att-item"><div class="att-label">AZ</div><div class="att-val" id="azVal" style="font-size:11px;color:var(--text1)">9.81</div><div class="att-unit">m/s²</div></div>
+        </div>
+      </div>
+
+      <!-- Gyro wheel -->
+      <div class="section">
+        <div class="sec-title">Momentum Wheel · A3144</div>
+        <div class="gyro-ring-wrap">
+          <canvas id="gyroCanvas" width="70" height="70"></canvas>
+          <div class="gyro-vals">
+            <div class="gyro-rpm" id="gyroRpm">7842</div>
+            <div class="gyro-rpm-unit">RPM</div>
+            <div class="gyro-degs" id="gyroDegs">47,052 deg/s</div>
+            <div class="gyro-status" id="gyroStatus">● SPINNING</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GNSS -->
+      <div class="section">
+        <div class="sec-title">GNSS · NavIC L5</div>
+        <div class="map-container"><canvas id="mapCanvas" width="244" height="90"></canvas>
+          <div class="map-overlay" id="mapOverlay">ACQUIRING…</div>
+        </div>
+        <div class="gnss-grid">
+          <div class="gnss-cell"><div class="gnss-lbl">LATITUDE</div><div class="gnss-val highlight" id="gnssLat">28.4506°N</div></div>
+          <div class="gnss-cell"><div class="gnss-lbl">LONGITUDE</div><div class="gnss-val highlight" id="gnssLon">77.5855°E</div></div>
+          <div class="gnss-cell"><div class="gnss-lbl">GNSS ALT</div><div class="gnss-val" id="gnssAlt">208.4 m</div></div>
+          <div class="gnss-cell"><div class="gnss-lbl">SATS (NavIC)</div><div class="gnss-val" id="gnssSats">9 / 12</div></div>
+          <div class="gnss-cell"><div class="gnss-lbl">GNSS TIME</div><div class="gnss-val" id="gnssTime" style="font-size:10px">14:32:07 UTC</div></div>
+          <div class="gnss-cell"><div class="gnss-lbl">DIST · PAD</div><div class="gnss-val" id="gnssDist">0 m</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────── CENTER PANEL ──────── -->
+    <div class="panel" id="panel-center" style="border-right:1px solid var(--border)">
+      <div class="section">
+        <!-- State chips -->
+        <div class="states-row">
+          <div class="state-chip" id="sc0">S0:BOOT</div>
+          <div class="state-chip" id="sc1">S1:TEST</div>
+          <div class="state-chip" id="sc2">S2:PAD</div>
+          <div class="state-chip" id="sc3">S3:ASCENT</div>
+          <div class="state-chip" id="sc4">S4:DEPLOY</div>
+          <div class="state-chip" id="sc5">S5:DESCENT</div>
+          <div class="state-chip" id="sc6">S6:AEROBREAK</div>
+          <div class="state-chip" id="sc7">S7:IMPACT</div>
+        </div>
+        <!-- Altitude readout -->
+        <div class="altitude-header">
+          <div class="alt-big" id="altBig">0.0</div>
+          <div class="alt-unit">m</div>
+          <div class="alt-rate" id="altRate">▼ 0.0 m/s</div>
+        </div>
+        <!-- Altitude chart -->
+        <div class="chart-wrap" id="chartWrap">
+          <canvas id="altChart" style="width:100%;height:100%"></canvas>
+        </div>
+        <!-- Telem cards -->
+        <div class="telem-row">
+          <div class="telem-card"><div class="telem-lbl">PRESSURE</div><div class="telem-val" id="pressVal">101325</div><div style="font-family:var(--mono);font-size:9px;color:var(--text2)">Pa</div></div>
+          <div class="telem-card"><div class="telem-lbl">TEMP · BMP</div><div class="telem-val" id="tempVal">28.5</div><div style="font-family:var(--mono);font-size:9px;color:var(--text2)">°C</div></div>
+          <div class="telem-card"><div class="telem-lbl">VOLTAGE</div><div class="telem-val ok" id="voltVal">4.08</div><div style="font-family:var(--mono);font-size:9px;color:var(--text2)">V</div></div>
+          <div class="telem-card"><div class="telem-lbl">PKT / STATE</div><div class="telem-val warn" id="pktState">0 / 2</div><div style="font-family:var(--mono);font-size:9px;color:var(--text2)">─</div></div>
+        </div>
+      </div>
+      <!-- Terminal -->
+      <div class="section" style="margin-top:0">
+        <div class="sec-title" style="margin-bottom:6px">Telemetry Terminal · 1 Hz CSV</div>
+        <div class="terminal" id="terminal">
+          <div class="terminal-line"><span class="terminal-prompt">[GS]</span>Ground station initialised. Waiting for ARM command.</div>
+          <div class="terminal-line"><span class="terminal-prompt">[GS]</span>XBee Pro S2C detected on COM3. PANID: BU-ASTRO-2026</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────── RIGHT PANEL ──────── -->
+    <div class="panel" id="panel-right">
+      <!-- Environmentals -->
+      <div class="section">
+        <div class="sec-title">Environmental · BMP390</div>
+        <div class="enviro-grid">
+          <div class="env-card"><div class="env-lbl">PRESSURE</div><div class="env-val" id="rPressure">101325</div><div class="env-unit">Pa</div></div>
+          <div class="env-card"><div class="env-lbl">TEMPERATURE</div><div class="env-val hot" id="rTemp">28.5</div><div class="env-unit">°C</div></div>
+          <div class="env-card"><div class="env-lbl">BAT VOLTAGE</div><div class="env-val" id="rVolt">4.08</div><div class="env-unit">V</div></div>
+          <div class="env-card"><div class="env-lbl">UV INDEX</div><div class="env-val" id="rUV">3.2</div><div class="env-unit">UVI</div></div>
+        </div>
+      </div>
+
+      <!-- Particulate Matter -->
+      <div class="section">
+        <div class="sec-title">Particulate Matter · SPS30</div>
+        <div class="pm-row">
+          <span class="pm-label">PM1.0</span>
+          <div class="pm-bar-bg"><div class="pm-bar-fill" id="pm1bar" style="width:18%;background:var(--green)"></div></div>
+          <span class="pm-val" id="pm1val">8.2 µg</span>
+        </div>
+        <div class="pm-row">
+          <span class="pm-label">PM2.5</span>
+          <div class="pm-bar-bg"><div class="pm-bar-fill" id="pm25bar" style="width:32%;background:var(--cyan2)"></div></div>
+          <span class="pm-val" id="pm25val">18.4 µg</span>
+        </div>
+        <div class="pm-row">
+          <span class="pm-label">PM4.0</span>
+          <div class="pm-bar-bg"><div class="pm-bar-fill" id="pm4bar" style="width:44%;background:var(--amber2)"></div></div>
+          <span class="pm-val" id="pm4val">26.1 µg</span>
+        </div>
+        <div class="pm-row">
+          <span class="pm-label">PM10</span>
+          <div class="pm-bar-bg"><div class="pm-bar-fill" id="pm10bar" style="width:55%;background:var(--orange)"></div></div>
+          <span class="pm-val" id="pm10val">35.8 µg</span>
+        </div>
+      </div>
+
+      <!-- CO2 + SCD41 -->
+      <div class="section">
+        <div class="sec-title">CO₂ / Humidity · SCD41</div>
+        <div class="co2-meter" style="margin-bottom:6px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text2);width:28px">CO₂</div>
+          <div class="co2-bar-bg">
+            <div class="co2-bar-fill" id="co2bar" style="width:35%;background:linear-gradient(90deg,var(--green2),var(--amber))"></div>
+            <div class="co2-warning-line" style="left:60%"></div>
+          </div>
+          <div style="margin-left:6px">
+            <div class="co2-val" id="co2val">1420</div>
+            <div class="co2-unit">ppm</div>
+          </div>
+        </div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text2);margin-bottom:6px;padding-left:34px">Threshold: 2400 ppm ▲</div>
+        <div class="scd-grid">
+          <div class="scd-cell"><div class="scd-lbl">TEMP (SCD)</div><div class="scd-val" id="scdTemp">27.2°C</div></div>
+          <div class="scd-cell"><div class="scd-lbl">HUMIDITY</div><div class="scd-val" id="scdHum">54.6%</div></div>
+        </div>
+      </div>
+
+      <!-- MiCS-4514 -->
+      <div class="section">
+        <div class="sec-title">Atm. Gases · MiCS-4514</div>
+        <div class="gas-row">
+          <div class="gas-card">
+            <div class="gas-label">NO₂</div>
+            <div class="gas-val" id="no2val">0.048</div>
+            <div class="gas-unit">ppm</div>
+            <div style="height:3px;background:var(--bg1);border-radius:2px;margin-top:4px;overflow:hidden"><div id="no2bar" style="height:100%;width:24%;background:var(--amber);border-radius:2px;transition:width 1s"></div></div>
+          </div>
+          <div class="gas-card">
+            <div class="gas-label">CO</div>
+            <div class="gas-val" id="coval">1.24</div>
+            <div class="gas-unit">ppm</div>
+            <div style="height:3px;background:var(--bg1);border-radius:2px;margin-top:4px;overflow:hidden"><div id="cobar" style="height:100%;width:31%;background:var(--orange);border-radius:2px;transition:width 1s"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AQI MQ-135 -->
+      <div class="section">
+        <div class="sec-title">Air Quality Index · MQ-135</div>
+        <div class="aqi-wrap">
+          <canvas id="aqiCanvas" width="70" height="70"></canvas>
+          <div class="aqi-info">
+            <div class="aqi-number" id="aqiNum">42</div>
+            <div class="aqi-label" id="aqiLabel">GOOD</div>
+            <div class="aqi-sub" id="aqiSub">Raw: 312 ADC · 0.65V</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+
+// ── Simulation state ──
+let tick = 0;
+let missionSec = 0;
+let simActive = false;
+let armed = false;
+let simPhase = 0; // 0=pad,1=ascent,2=descent,3=main,4=landed
+let altitude = 0;
+let altHistory = [];
+let timeHistory = [];
+let pktCount = 0;
+let currentState = 2;
+
+const STATES = ['BOOT','TEST_MODE','LAUNCH_PAD','ASCENT','ROCKET_DEPLOY','DESCENT','AEROBREAK_RELEASE','IMPACT'];
+
+// ── Chart init ──
+const chartCtx = $('altChart').getContext('2d');
+const altChart = new Chart(chartCtx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Altitude (m)',
+      data: [],
+      borderColor: '#ffaa00',
+      backgroundColor: 'rgba(255,170,0,0.08)',
+      borderWidth: 1.5,
+      pointRadius: 0,
+      tension: 0.3,
+      fill: true
+    },{
+      label: 'Main Deploy',
+      data: [],
+      borderColor: 'rgba(0,232,122,0.6)',
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderDash: [4,3],
+      pointRadius: 0,
+      tension: 0
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: false,
+    scales: {
+      x: { display: true, ticks: { color: '#5a7a99', font: { family: "'Share Tech Mono'", size: 9 }, maxTicksLimit: 8 }, grid: { color: 'rgba(30,51,72,0.6)' } },
+      y: { display: true, min: 0, max: 1100, ticks: { color: '#5a7a99', font: { family: "'Share Tech Mono'", size: 9 }, callback: v => v+'m' }, grid: { color: 'rgba(30,51,72,0.6)' } }
+    },
+    plugins: { legend: { display: false }, tooltip: { enabled: false } }
+  }
+});
+
+// ── 3D CanSat canvas ──
+const cs3d = $('canSatCanvas').getContext('2d');
+let pitch3d = 0, roll3d = 0, yaw3d = 0;
+function drawCanSat() {
+  const w = 244, h = 120;
+  cs3d.clearRect(0,0,w,h);
+  cs3d.fillStyle = '#07100f';
+  cs3d.fillRect(0,0,w,h);
+  // grid lines
+  cs3d.strokeStyle = 'rgba(0,80,60,.3)';
+  cs3d.lineWidth = .5;
+  for(let i=0;i<w;i+=20){cs3d.beginPath();cs3d.moveTo(i,0);cs3d.lineTo(i,h);cs3d.stroke()}
+  for(let i=0;i<h;i+=20){cs3d.beginPath();cs3d.moveTo(0,i);cs3d.lineTo(w,i);cs3d.stroke()}
+  // draw CanSat cylinder (simplified 2.5D projection)
+  const cx = 80, cy = h/2;
+  const pr = pitch3d * Math.PI/180;
+  const rl = roll3d * Math.PI/180;
+  const height3d = 60 + Math.cos(pr)*20;
+  const width3d = 22 + Math.abs(Math.sin(rl))*8;
+  // body
+  cs3d.save();
+  cs3d.translate(cx, cy);
+  cs3d.rotate(rl * 0.3);
+  // main body
+  cs3d.fillStyle = 'rgba(255,100,30,.15)';
+  cs3d.strokeStyle = '#ff6b2b';
+  cs3d.lineWidth = 1.5;
+  cs3d.beginPath();
+  cs3d.roundRect(-width3d/2, -height3d/2, width3d, height3d, 6);
+  cs3d.fill(); cs3d.stroke();
+  // bulkhead lines
+  cs3d.strokeStyle = 'rgba(255,107,43,.4)';
+  cs3d.lineWidth = .8;
+  [-22,-8,6,16].forEach(oy => {
+    cs3d.beginPath(); cs3d.moveTo(-width3d/2, oy); cs3d.lineTo(width3d/2, oy); cs3d.stroke();
+  });
+  // top dome
+  cs3d.fillStyle = 'rgba(0,212,255,.12)';
+  cs3d.strokeStyle = '#00d4ff';
+  cs3d.lineWidth = 1;
+  cs3d.beginPath();
+  cs3d.ellipse(0, -height3d/2, width3d/2, 8, 0, Math.PI, 0);
+  cs3d.fill(); cs3d.stroke();
+  // gyro indicator
+  cs3d.strokeStyle = 'rgba(255,170,0,.7)';
+  cs3d.lineWidth = 2;
+  cs3d.beginPath();
+  cs3d.arc(0, 5, 8, 0, Math.PI*2);
+  cs3d.stroke();
+  // chute lines
+  cs3d.strokeStyle = 'rgba(0,232,122,.5)';
+  cs3d.lineWidth = .7;
+  cs3d.beginPath(); cs3d.moveTo(-5,-height3d/2); cs3d.lineTo(-18,-height3d/2-12); cs3d.stroke();
+  cs3d.beginPath(); cs3d.moveTo(5,-height3d/2); cs3d.lineTo(18,-height3d/2-12); cs3d.stroke();
+  cs3d.restore();
+  // axis labels
+  cs3d.fillStyle = '#5a7a99';
+  cs3d.font = '9px Share Tech Mono';
+  cs3d.fillText('X', 4, 12); cs3d.fillText('Z', 235, 12);
+  // attitude indicator (right side)
+  drawAttIndicator(cs3d, 170, cy, 38, pitch3d, roll3d);
+}
+function drawAttIndicator(ctx, x, y, r, pitch, roll) {
+  ctx.save();
+  ctx.translate(x, y);
+  // outer ring
+  ctx.strokeStyle = '#1e3348'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke();
+  // horizon
+  ctx.rotate(roll * Math.PI / 180);
+  const py = pitch * r / 90;
+  ctx.fillStyle = 'rgba(255,107,43,.25)';
+  ctx.fillRect(-r, py, r*2, r-py);
+  ctx.fillStyle = 'rgba(0,212,255,.2)';
+  ctx.fillRect(-r, -r, r*2, py+r);
+  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-r, py); ctx.lineTo(r, py); ctx.stroke();
+  ctx.restore();
+  // crosshair
+  ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(x-12,y); ctx.lineTo(x-4,y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x+4,y); ctx.lineTo(x+12,y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x,y-4); ctx.lineTo(x,y+4); ctx.stroke();
+  ctx.strokeStyle = '#1e3348'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(0,212,255,.3)'; ctx.lineWidth = .5;
+  ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// ── Gyro canvas ──
+const gyroCtx = $('gyroCanvas').getContext('2d');
+let gyroAngle = 0;
+function drawGyro(rpm) {
+  const w=70, h=70, cx=35, cy=35, r=28;
+  gyroCtx.clearRect(0,0,w,h);
+  gyroCtx.fillStyle = '#07100f';
+  gyroCtx.fillRect(0,0,w,h);
+  // background circle
+  gyroCtx.strokeStyle = '#1e3348'; gyroCtx.lineWidth = 4;
+  gyroCtx.beginPath(); gyroCtx.arc(cx,cy,r,0,Math.PI*2); gyroCtx.stroke();
+  // arc fill
+  const frac = Math.min(rpm/12000, 1);
+  gyroCtx.strokeStyle = rpm > 9000 ? '#ff3b3b' : rpm > 6000 ? '#ffaa00' : '#00e87a';
+  gyroCtx.lineWidth = 4;
+  gyroCtx.beginPath();
+  gyroCtx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2 + frac*Math.PI*2);
+  gyroCtx.stroke();
+  // spoke rotation
+  gyroCtx.save(); gyroCtx.translate(cx,cy); gyroCtx.rotate(gyroAngle);
+  gyroCtx.strokeStyle = 'rgba(255,170,0,.5)'; gyroCtx.lineWidth = 1;
+  for(let i=0;i<4;i++){
+    gyroCtx.rotate(Math.PI/2);
+    gyroCtx.beginPath(); gyroCtx.moveTo(0,4); gyroCtx.lineTo(0,r-6); gyroCtx.stroke();
+  }
+  gyroCtx.restore();
+  gyroCtx.fillStyle = '#ffaa00'; gyroCtx.font = 'bold 9px Share Tech Mono';
+  gyroCtx.textAlign = 'center'; gyroCtx.fillText(Math.round(rpm)+'', cx, cy+3);
+}
+
+// ── AQI canvas ──
+const aqiCtx = $('aqiCanvas').getContext('2d');
+function drawAQI(aqi) {
+  const w=70,h=70,cx=35,cy=35,r=28;
+  aqiCtx.clearRect(0,0,w,h);
+  aqiCtx.fillStyle = '#07100f'; aqiCtx.fillRect(0,0,w,h);
+  const colors = [[0,50,'#00e87a'],[51,100,'#ffaa00'],[101,150,'#ff6b2b'],[151,200,'#ff3b3b'],[201,300,'#a855f7']];
+  let col = '#00e87a';
+  colors.forEach(([lo,hi,c])=>{ if(aqi>=lo && aqi<=hi) col=c; });
+  const frac = Math.min(aqi/300, 1);
+  aqiCtx.strokeStyle = '#1e3348'; aqiCtx.lineWidth = 4;
+  aqiCtx.beginPath(); aqiCtx.arc(cx,cy,r,-Math.PI*0.75,Math.PI*0.75); aqiCtx.stroke();
+  aqiCtx.strokeStyle = col; aqiCtx.lineWidth = 5;
+  aqiCtx.beginPath();
+  aqiCtx.arc(cx,cy,r,-Math.PI*0.75,-Math.PI*0.75 + frac*Math.PI*1.5);
+  aqiCtx.stroke();
+  $('aqiNum').style.color = col;
+  $('aqiLabel').style.color = col;
+}
+
+// ── Map canvas ──
+const mapCtx = $('mapCanvas').getContext('2d');
+let trackPoints = [];
+let mapOffset = {x: 122, y: 45};
+function drawMap() {
+  const w=244,h=90;
+  mapCtx.clearRect(0,0,w,h);
+  mapCtx.fillStyle = '#07100f'; mapCtx.fillRect(0,0,w,h);
+  // grid
+  mapCtx.strokeStyle = 'rgba(30,51,72,.4)'; mapCtx.lineWidth = .5;
+  for(let i=0;i<w;i+=15){mapCtx.beginPath();mapCtx.moveTo(i,0);mapCtx.lineTo(i,h);mapCtx.stroke()}
+  for(let i=0;i<h;i+=15){mapCtx.beginPath();mapCtx.moveTo(0,i);mapCtx.lineTo(w,i);mapCtx.stroke()}
+  // track
+  if(trackPoints.length > 1) {
+    mapCtx.strokeStyle = 'rgba(0,212,255,.6)'; mapCtx.lineWidth = 1.5;
+    mapCtx.beginPath(); mapCtx.moveTo(trackPoints[0].x, trackPoints[0].y);
+    trackPoints.forEach(p => mapCtx.lineTo(p.x, p.y));
+    mapCtx.stroke();
+  }
+  // current position
+  if(trackPoints.length > 0) {
+    const last = trackPoints[trackPoints.length-1];
+    mapCtx.fillStyle = '#00d4ff';
+    mapCtx.beginPath(); mapCtx.arc(last.x, last.y, 4, 0, Math.PI*2); mapCtx.fill();
+    mapCtx.strokeStyle = 'rgba(0,212,255,.3)'; mapCtx.lineWidth = 1;
+    mapCtx.beginPath(); mapCtx.arc(last.x, last.y, 8, 0, Math.PI*2); mapCtx.stroke();
+  }
+  // landing pad
+  mapCtx.strokeStyle = 'rgba(0,232,122,.5)'; mapCtx.lineWidth = 1;
+  mapCtx.beginPath(); mapCtx.moveTo(mapOffset.x-6, mapOffset.y); mapCtx.lineTo(mapOffset.x+6, mapOffset.y); mapCtx.stroke();
+  mapCtx.beginPath(); mapCtx.moveTo(mapOffset.x, mapOffset.y-6); mapCtx.lineTo(mapOffset.x, mapOffset.y+6); mapCtx.stroke();
+  mapCtx.strokeStyle = 'rgba(0,232,122,.3)'; mapCtx.lineWidth = .5;
+  mapCtx.beginPath(); mapCtx.arc(mapOffset.x, mapOffset.y, 10, 0, Math.PI*2); mapCtx.stroke();
+  // compass
+  mapCtx.fillStyle = '#5a7a99'; mapCtx.font = '9px Share Tech Mono';
+  mapCtx.textAlign = 'right'; mapCtx.fillText('N', w-4, 12);
+}
+
+// ── Terminal ──
+function termLog(line, isNew=false) {
+  const t = $('terminal');
+  const div = document.createElement('div');
+  div.className = 'terminal-line' + (isNew?' new':'');
+  div.innerHTML = line;
+  t.appendChild(div);
+  if(t.children.length > 80) t.removeChild(t.firstChild);
+  t.scrollTop = t.scrollHeight;
+}
+
+// ── State machine display ──
+function setStateDisplay(s) {
+  for(let i=0;i<8;i++) $('sc'+i).classList.toggle('active', i===s);
+  const names = ['STATE 0 · BOOT','STATE 1 · TEST_MODE','STATE 2 · LAUNCH_PAD','STATE 3 · ASCENT','STATE 4 · ROCKET_DEPLOY','STATE 5 · DESCENT','STATE 6 · AEROBREAK_RELEASE','STATE 7 · IMPACT'];
+  $('stateLabel').textContent = names[s];
+}
+
+// ── Mission time ──
+function formatMET(s) {
+  const h = String(Math.floor(s/3600)).padStart(2,'0');
+  const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
+  const ss = String(s%60).padStart(2,'0');
+  return `MET ${h}:${m}:${ss}`;
+}
+
+// ── Main simulation tick ──
+let altRate = 0;
+let prevAlt = 0;
+let gyroRPM = 0;
+let mainDeployed = false;
+
+function simTick() {
+  tick++;
+  if(!simActive) {
+    gyroAngle += 0.02;
+    drawCanSat(); drawGyro(gyroRPM); drawAQI(parseInt($('aqiNum').textContent)||42); drawMap();
+    return;
+  }
+
+  missionSec++;
+  pktCount++;
+  $('pktCount').textContent = pktCount;
+  $('missionTime').textContent = formatMET(missionSec);
+  $('pktState').textContent = pktCount + ' / ' + currentState;
+
+  // Phase transitions
+  if(missionSec === 3 && simPhase === 0) { simPhase=1; currentState=3; setStateDisplay(3); termLog('<span class="terminal-prompt">[EVT]</span> <span style="color:#ffaa00">ASCENT DETECTED — Accel > 3G</span>',true); }
+  if(missionSec === 13 && simPhase === 1) { simPhase=2; currentState=4; setStateDisplay(4); mainDeployed=false; termLog('<span class="terminal-prompt">[EVT]</span> <span style="color:#00d4ff">ROCKET_DEPLOY — Drogue deployed passively</span>',true); gyroRPM = 200; }
+  if(simPhase === 2 && altitude >= 999) { simPhase=2; } // peak
+  if(simPhase === 2 && missionSec > 15 && altitude > 0) {
+    if(currentState !== 5) { currentState=5; setStateDisplay(5); termLog('<span class="terminal-prompt">[EVT]</span> <span style="color:#00d4ff">STATE 5: DESCENT under drogue @ ~20 m/s</span>',true); }
+  }
+
+  // Altitude simulation
+  if(simPhase === 1) {
+    altitude = Math.min(1000, altitude + 60 + Math.random()*10);
+  } else if(simPhase === 2) {
+    if(altitude < 20 && missionSec > 15) { simPhase=4; currentState=7; setStateDisplay(7); altitude=0; termLog('<span class="terminal-prompt">[EVT]</span> <span style="color:#ff3b3b">STATE 7: IMPACT — Beacon activated</span>',true); }
+    else if(altitude > 600 || !mainDeployed) {
+      altitude = Math.max(0, altitude - 18 - Math.random()*4);
+      if(altitude <= 600 && !mainDeployed) {
+        mainDeployed=true; currentState=6; setStateDisplay(6);
+        termLog('<span class="terminal-prompt">[EVT]</span> <span style="color:#00e87a">STATE 6: AEROBREAK_RELEASE — Main chute deployed @600m</span>',true);
+      }
+    } else {
+      altitude = Math.max(0, altitude - 2.2 - Math.random()*0.6);
+    }
+    gyroRPM = Math.min(8200, gyroRPM + 60 + Math.random()*20);
+  } else if(simPhase === 0) {
+    altitude = 0;
+  } else if(simPhase === 4) {
+    altitude = 0; gyroRPM = Math.max(0, gyroRPM-100);
+  }
+
+  altRate = (altitude - prevAlt);
+  prevAlt = altitude;
+
+  // Update altitude display
+  $('altBig').textContent = altitude.toFixed(1);
+  $('altRate').textContent = (altRate < 0 ? '▼' : '▲') + ' ' + Math.abs(altRate).toFixed(1) + ' m/s';
+  $('altRate').style.color = altRate < -5 ? '#ff3b3b' : '#00e87a';
+
+  // Sensor simulation
+  const temp = 28.5 - altitude * 0.0065 + (Math.random()-.5)*0.3;
+  const pressure = 101325 * Math.pow(1 - altitude*2.256e-5, 5.255);
+  const volt = 4.08 - altitude/50000 - tick*0.00005 + (Math.random()-.5)*0.02;
+
+  $('tempVal').textContent = temp.toFixed(1);
+  $('pressVal').textContent = Math.round(pressure);
+  $('voltVal').textContent = Math.max(3.2,volt).toFixed(2);
+  $('rTemp').textContent = temp.toFixed(1);
+  $('rPressure').textContent = Math.round(pressure);
+  $('rVolt').textContent = Math.max(3.2,volt).toFixed(2);
+  $('rUV').textContent = (3.2 + altitude*0.003 + (Math.random()-.5)*0.2).toFixed(1);
+  $('voltVal').style.color = volt < 3.5 ? 'var(--red)' : volt < 3.7 ? 'var(--amber)' : 'var(--green)';
+
+  // Orientation
+  pitch3d = 2*Math.sin(tick*0.05) + (Math.random()-.5)*1;
+  roll3d = 1.5*Math.cos(tick*0.04) + (Math.random()-.5)*0.8;
+  yaw3d = (tick*2) % 360;
+  $('pitchVal').textContent = pitch3d.toFixed(1);
+  $('rollVal').textContent = roll3d.toFixed(1);
+  $('yawVal').textContent = yaw3d.toFixed(1);
+  $('axVal').textContent = (Math.sin(tick*.07)*0.5 + (Math.random()-.5)*0.2).toFixed(2);
+  $('ayVal').textContent = ((Math.random()-.5)*0.4).toFixed(2);
+  $('azVal').textContent = (9.81 + (Math.random()-.5)*0.3).toFixed(2);
+
+  // GNSS
+  const lat = 28.4506 + altitude*0.00001 + tick*0.000002;
+  const lon = 77.5855 + altitude*0.000008 + tick*0.0000015;
+  $('gnssLat').textContent = lat.toFixed(4)+'°N';
+  $('gnssLon').textContent = lon.toFixed(4)+'°E';
+  $('gnssAlt').textContent = (altitude + 208).toFixed(1)+' m';
+  $('gnssSats').textContent = (altitude > 200 ? '10' : '9') + ' / 12';
+  const d = Math.sqrt((lat-28.4506)**2 + (lon-77.5855)**2) * 111000;
+  $('gnssDist').textContent = d.toFixed(0)+' m';
+  if(trackPoints.length < 200) trackPoints.push({ x: 122 + (lon-77.5855)*18000, y: 45 - (lat-28.4506)*18000 });
+  $('mapOverlay').textContent = 'LOCK · '+$('gnssSats').textContent+' SAT';
+
+  // Gyro display
+  gyroAngle += gyroRPM * 0.001;
+  $('gyroRpm').textContent = Math.round(gyroRPM);
+  $('gyroDegs').textContent = (gyroRPM * 6).toFixed(0)+' deg/s';
+  $('gyroStatus').textContent = gyroRPM > 100 ? '● SPINNING' : '○ IDLE';
+  $('gyroStatus').style.color = gyroRPM > 100 ? 'var(--green)' : 'var(--text2)';
+
+  // Air quality
+  const aqi = Math.max(20, Math.min(150, 42 + altitude*0.02 + (Math.random()-.5)*3));
+  const pm25 = Math.max(5, 18.4 + altitude*0.01 + (Math.random()-.5)*2);
+  const pm10 = Math.max(8, 35.8 + altitude*0.015 + (Math.random()-.5)*3);
+  const pm1 = pm25*0.45; const pm4 = pm25*1.4;
+  $('pm1val').textContent = pm1.toFixed(1)+' µg';
+  $('pm25val').textContent = pm25.toFixed(1)+' µg';
+  $('pm4val').textContent = pm4.toFixed(1)+' µg';
+  $('pm10val').textContent = pm10.toFixed(1)+' µg';
+  $('pm1bar').style.width = Math.min(100,pm1/50*100)+'%';
+  $('pm25bar').style.width = Math.min(100,pm25/100*100)+'%';
+  $('pm4bar').style.width = Math.min(100,pm4/120*100)+'%';
+  $('pm10bar').style.width = Math.min(100,pm10/150*100)+'%';
+  const co2 = Math.max(400, 1420 - altitude*0.3 + (Math.random()-.5)*20);
+  $('co2val').textContent = Math.round(co2);
+  $('co2bar').style.width = Math.min(100,co2/4000*100)+'%';
+  $('co2bar').style.background = co2 > 2400 ? '#ff3b3b' : co2 > 1800 ? '#ffaa00' : 'linear-gradient(90deg,var(--green2),var(--amber))';
+  $('scdTemp').textContent = (temp - 1.3).toFixed(1)+'°C';
+  $('scdHum').textContent = (54.6 - altitude*0.005 + (Math.random()-.5)*0.5).toFixed(1)+'%';
+  const no2 = Math.max(0.01, 0.048 + altitude*0.00003 + (Math.random()-.5)*0.005);
+  const co = Math.max(0.5, 1.24 + altitude*0.0005 + (Math.random()-.5)*0.1);
+  $('no2val').textContent = no2.toFixed(3);
+  $('coval').textContent = co.toFixed(2);
+  $('no2bar').style.width = Math.min(100,no2/0.2*100)+'%';
+  $('cobar').style.width = Math.min(100,co/10*100)+'%';
+  $('aqiNum').textContent = Math.round(aqi);
+  const aqiLabels = [[0,50,'GOOD'],[51,100,'MODERATE'],[101,150,'UNHEALTHY·SENS'],[151,200,'UNHEALTHY']];
+  aqiLabels.forEach(([lo,hi,lab]) => { if(aqi>=lo && aqi<=hi) { $('aqiLabel').textContent=lab; } });
+  $('aqiSub').textContent = 'Raw: '+(312+altitude*0.08).toFixed(0)+' ADC · '+(0.65+altitude*0.0002).toFixed(2)+'V';
+
+  // Altitude chart update
+  altHistory.push(altitude);
+  timeHistory.push(missionSec);
+  if(altHistory.length > 200) { altHistory.shift(); timeHistory.shift(); }
+  altChart.data.labels = timeHistory.map(t => t+'s');
+  altChart.data.datasets[0].data = altHistory;
+  altChart.update('none');
+
+  // Terminal CSV
+  if(pktCount % 1 === 0) {
+    const ts = missionSec.toFixed(0);
+    const csvLine = `BU-ASTRO-CAN7,${ts},${pktCount},${altitude.toFixed(1)},${Math.round(pressure)},${temp.toFixed(1)},${Math.max(3.2,volt).toFixed(2)},${ts},${lat.toFixed(4)},${lon.toFixed(4)},${(altitude+208).toFixed(1)},${altitude>200?10:9},${Math.abs(altRate).toFixed(2)}/${roll3d.toFixed(1)},${Math.round(gyroRPM*6)},${currentState},${(3.2+altitude*0.003).toFixed(1)}`;
+    termLog(`<span class="terminal-prompt">[RX]</span>${csvLine}`, true);
+  }
+
+  // Draw canvases
+  drawCanSat(); drawGyro(gyroRPM); drawAQI(Math.round(aqi)); drawMap();
+}
+
+// ── Commands ──
+function cmdArm() {
+  armed=true; simActive=true; simPhase=0; currentState=2; setStateDisplay(2);
+  termLog('<span class="terminal-prompt">[CMD]</span> <span style="color:#00e87a">ARM / START_TX — Telemetry armed. Awaiting launch.</span>', true);
+  $('connDot').style.background='var(--green)';
+}
+function cmdStop() {
+  simActive=false;
+  termLog('<span class="terminal-prompt">[CMD]</span> <span style="color:#ff3b3b">STOP_TX — Telemetry halted.</span>', true);
+}
+function cmdCal() {
+  termLog('<span class="terminal-prompt">[CMD]</span> <span style="color:#00d4ff">CAL ZERO — Barometer and gyro zeroed at ground level.</span>', true);
+}
+function cmdSimEn() {
+  termLog('<span class="terminal-prompt">[CMD]</span> <span style="color:#a855f7">SIM_ENABLE — Simulation mode enabled. Awaiting SIM_ACTIVATE.</span>', true);
+}
+function cmdSimAct() {
+  if(!simActive){ simActive=true; armed=true; }
+  altitude=0; missionSec=0; pktCount=0; altHistory=[]; timeHistory=[]; trackPoints=[];
+  simPhase=0; mainDeployed=false; gyroRPM=0; currentState=2; setStateDisplay(2);
+  termLog('<span class="terminal-prompt">[CMD]</span> <span style="color:#a855f7">SIM_ACTIVATE — Simulation started. Launch in T-3s.</span>', true);
+  setTimeout(()=>{ simPhase=1; },3000);
+}
+
+// ── Init ──
+setStateDisplay(2);
+drawCanSat(); drawGyro(0); drawAQI(42); drawMap();
+termLog('<span class="terminal-prompt">[GS]</span> CAN-7USAT Ground Station v3.0 — Bennett University Astronomy Club');
+termLog('<span class="terminal-prompt">[GS]</span> XBee Pro S2C · PANID: BU-ASTRO-2026 · 115200 baud');
+termLog('<span class="terminal-prompt">[GS]</span> Mission file: Flight_BU-ASTRO-CAN7.csv — auto-logging active');
+termLog('<span class="terminal-prompt">[GS]</span> Press <span style="color:#a855f7">SIM_ACTIVATE</span> to run full descent simulation.');
+
+setInterval(simTick, 1000);
+</script>
