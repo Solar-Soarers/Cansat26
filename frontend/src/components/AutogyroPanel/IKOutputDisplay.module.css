@@ -1,0 +1,143 @@
+.eqRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  margin-bottom: 5px;
+}
+
+.eqVar {
+  color: #45F3FF;
+  font-weight: 600;
+}
+
+.eqGain {
+  color: #A78BFA;
+}
+
+.eqInput {
+  color: #60A5FA;
+}
+
+.eqClamp {
+  color: var(--text-muted);
+}
+
+.eqOp {
+  color: var(--text-muted);
+}
+
+.eqResult {
+  color: #FBBF24;
+  font-weight: 700;
+}
+
+.compRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.compCard {
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  border: 1px solid var(--bg-border);
+}
+
+.compTitle {
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.compVal {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+.deltaRow {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.gainPanel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.gainCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--bg-base);
+  border: 1px solid var(--bg-border);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  cursor: ns-resize;
+}
+
+.gainCard:hover {
+  background: var(--bg-elevated);
+}
+
+.gainLabel {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.gainValue {
+  font-family: var(--font-mono);
+  color: var(--cyan);
+  font-size: 16px;
+}
+
+.gainHint {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.gainNote {
+  grid-column: 1 / -1;
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.sendBtn {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding: 5px;
+  margin-top: 0;
+  background: transparent;
+  border: 1px solid var(--bg-border);
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.sendBtn:hover {
+  background: var(--bg-elevated);
+}
+
+.sectionDivider {
+  border-top: 1px solid var(--bg-border);
+  margin: 8px 0;
+}

@@ -1,0 +1,38 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.canvas {
+  display: block;
+}
+
+.rawRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 9px;
+  font-family: var(--font-mono);
+}
+
+.rawLabel {
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.rawVal {
+  color: var(--text-secondary);
+}
+
+.compLabel {
+  color: var(--cyan);
+  letter-spacing: 0.08em;
+  margin-left: 4px;
+}
+
+.compVal {
+  color: var(--cyan);
+  font-weight: 600;
+}
